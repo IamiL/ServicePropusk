@@ -1,0 +1,39 @@
+<html>
+
+<link rel="stylesheet" href="http://localhost:8080/style/common.css">
+<link href="https://cdn.jsdelivr.net/gh/repalash/gilroy-free-webfont@fonts/Gilroy-Extrabold.css" rel="stylesheet">
+<link href="https://raw.githubusercontent.com/repalash/gilroy-free-webfont/fonts/Gilroy-Extrabold.css" rel="stylesheet">
+
+<header>
+<div id="header-content">
+<a href="http://localhost:8080">
+<img src="http://localhost:9000/static/header_logo.png">
+</a>
+<div class="tn-atom" id="tn-atom1"></div>
+<div class="tn-atom" id="tn-atom2"></div>
+</div>
+<div class="tn-atom" id="tn-atom3"></div>
+</header>
+
+<main>
+<div id="desc-page-main-content">
+<div>
+<h1>Описание услуги</h1>
+</div>
+<div id="desc-page-main-service-description">
+<h2> {{ .name }} </h2>
+
+<p>
+{{ .description }}
+</p>
+
+{{ .image }}
+
+<div><p>цена: {{ .price }}</p>{{ .button }}</div>
+
+
+</div>
+</div>
+</main>
+
+</html>
