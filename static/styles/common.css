@@ -365,7 +365,7 @@ a{
     width: 120px;
 }
 
-#cost > h3, #cost > p{
+#visitor > h3, #visitor > p, #date > h3, #date > p {
     display: inline;
     color: #292d41;
     font-size: 40px;

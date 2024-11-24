@@ -1,0 +1,74 @@
+package buildRepositoryPostgres
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	model "rip/domain"
+)
+
+type Storage struct {
+	db *pgxpool.Pool
+}
+
+func New(pool *pgxpool.Pool) (*Storage, error) {
+	return &Storage{db: pool}, nil
+}
+
+func (s *Storage) Buildings() ([]model.BuildingModel, error) {
+	const op = "repository.services.postgres.Buildings"
+
+	query := `SELECT id, name, description, img_url FROM buildings WHERE status = 'true'`
+
+	rows, err := s.db.Query(context.TODO(), query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: execute statement: %w", op, err)
+	}
+	defer rows.Close()
+
+	services := []model.BuildingModel{}
+	for rows.Next() {
+		c := model.BuildingModel{}
+		err := rows.Scan(
+			&c.Id,
+			&c.Name,
+			&c.Description,
+			&c.ImgUrl,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("%s: execute statement: %w", op, err)
+		}
+		services = append(services, c)
+	}
+
+	return services, nil
+}
+
+func (s *Storage) Build(id int64) (model.BuildingModel, error) {
+	const op = "repository.services.postgres.Build"
+
+	query := `SELECT name, description, img_url FROM buildings WHERE status = 'true' AND id = $1`
+
+	var build model.BuildingModel
+
+	build.Id = id
+
+	err := s.db.QueryRow(context.TODO(), query, id).Scan(
+		&build.Name,
+		&build.Description,
+		&build.ImgUrl,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return model.BuildingModel{}, errors.New("build not found")
+		}
+		return model.BuildingModel{}, fmt.Errorf(
+			"%s: execute statement: %w",
+			op,
+			err,
+		)
+	}
+	return build, nil
+}

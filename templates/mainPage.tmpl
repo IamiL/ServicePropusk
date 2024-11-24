@@ -5,20 +5,20 @@
 <link href="https://raw.githubusercontent.com/repalash/gilroy-free-webfont/fonts/Gilroy-Extrabold.css" rel="stylesheet">
 
 <header>
-<div id="header-content">
-<a href="http://localhost:8080">
-<img src="http://localhost:9000/static/header_logo.png">
-</a>
-<div class="tn-atom" id="tn-atom1"></div>
-<div class="tn-atom" id="tn-atom2"></div>
+    <div id="header-content">
+        <a href="http://localhost:8080">
+            <img src="http://localhost:9000/static/header_logo.png">
+        </a>
+        <div class="tn-atom" id="tn-atom1"></div>
+        <div class="tn-atom" id="tn-atom2"></div>
 
-</div>
-<div class="tn-atom" id="tn-atom3"></div>
+    </div>
+    <div class="tn-atom" id="tn-atom3"></div>
 </header>
 
 <main>
     <div>
-        <a id="cart-btn" href="/cart/{{ .cart_id }}">
+        <a id="cart-btn" href="/pass/{{ .pass_id }}">
             <div>7</div>
             <svg width="30px" height="30px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M7.5 18C8.32843 18 9 18.6716 9 19.5C9 20.3284 8.32843 21 7.5 21C6.67157 21 6 20.3284 6 19.5C6 18.6716 6.67157 18 7.5 18Z" stroke="#F15D37" stroke-width="1.5"/>
@@ -28,24 +28,24 @@
         </a>
     </div>
 
-<div id="main-content">
-<div id="main-services">
-<h1 class="title main-title">
-Получите пропуск в<br><span>МГТУ им. Н.Э. Баумана</span>
-</h1>
-    <form action="" method="get">
-        <label>
-            Поиск по корпусу:
-            <input type="text" name="serviceName" value="{{ .findValue }}">
-        </label>
-        <button type="submit">Поиск</button>
-    </form>
-<ul id="services-list">
-{{ .services }}
-</ul>
+    <div id="main-content">
+        <div id="main-services">
+            <h1 class="title main-title">
+                Получите пропуск в<br><span>МГТУ им. Н.Э. Баумана</span>
+            </h1>
+            <form action="" method="get">
+                <label>
+                    Поиск по корпусу:
+                    <input type="text" name="buildName" value="{{ .findValue }}">
+                </label>
+                <button type="submit">Поиск</button>
+            </form>
+            <ul id="services-list">
+                {{ .services }}
+            </ul>
 
-</div>
-</div>
+        </div>
+    </div>
 </main>
 
 </html>
