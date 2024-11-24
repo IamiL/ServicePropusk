@@ -25,9 +25,9 @@ func MainPage(
 			fmt.Println(err.Error())
 		}
 
+		passItemsCount, err := passService.GetPassItemsCount(0)
+
 		if strings.Contains(c.Request.URL.String(), "/?buildName=") {
-			//fmt.Println("вся строка:", c.Request.URL.String())
-			//fmt.Println("параметр 11= ", c.Request.URL.String()[12:])
 			decodedValue, err := url.QueryUnescape(c.Request.URL.String()[12:])
 			if err != nil {
 				fmt.Println(err.Error())
@@ -38,8 +38,9 @@ func MainPage(
 					"services": template.HTML(
 						buildingsService.GetBuilds(decodedValue),
 					),
-					"pass_id":   passID,
-					"findValue": decodedValue,
+					"pass_id":          passID,
+					"findValue":        decodedValue,
+					"pass_items_count": strconv.Itoa(passItemsCount),
 				},
 			)
 			return
@@ -52,7 +53,8 @@ func MainPage(
 						"",
 					),
 				),
-				"pass_id": passID,
+				"pass_id":          passID,
+				"pass_items_count": strconv.Itoa(passItemsCount),
 			},
 		)
 	}

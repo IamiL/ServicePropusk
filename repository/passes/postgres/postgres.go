@@ -101,10 +101,33 @@ func (s *Storage) Pass(id int64) (*model.PassModel, error) {
 	return &pass, nil
 }
 
-func (s *Storage) PassID(id int64) (int64, error) {
+func (s *Storage) PassID(uid int64) (int64, error) {
 	const op = "repository.passes.postgres.Pass"
 
-	return 0, nil
+	var id int64
+
+	query := `SELECT p.id
+				FROM passes AS p
+				WHERE p.creator = $1 AND
+				      status = 0;`
+
+	err := s.db.QueryRow(context.TODO(), query, uid).Scan(
+		&id,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			fmt.Println("error errnorows")
+			return 0, nil
+		}
+		fmt.Println("error other")
+		return 0, fmt.Errorf(
+			"%s: execute statement: %w",
+			op,
+			err,
+		)
+	}
+
+	return id, nil
 }
 
 func (s *Storage) AddToPass(id int64, buildingID int64) error {
@@ -182,4 +205,34 @@ func (s *Storage) FindDraftPassByCreator(
 	}
 
 	return id, nil
+}
+
+func (s *Storage) GetPassItemsCount(uid int64) (int, error) {
+	const op = "repository.passes.postgres.Pass"
+
+	var count int
+
+	query := `SELECT COUNT(bp.*)
+				FROM passes AS p
+				LEFT JOIN buildings_passes AS bp ON p.id = bp.pass
+				WHERE p.creator = $1 AND status = 0
+				GROUP BY p.creator;`
+
+	err := s.db.QueryRow(context.TODO(), query, uid).Scan(
+		&count,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			fmt.Println("error errnorows")
+			return 0, errors.New("pass not found")
+		}
+		fmt.Println("error other")
+		return 0, fmt.Errorf(
+			"%s: execute statement: %w",
+			op,
+			err,
+		)
+	}
+
+	return count, nil
 }

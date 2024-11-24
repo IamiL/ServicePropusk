@@ -66,3 +66,7 @@ func (p *PassService) AddToPass(uid int64, build int64) error {
 func (p *PassService) Delete(id int64) error {
 	return p.passReporitory.Delete(id)
 }
+
+func (p *PassService) GetPassItemsCount(uid int64) (int, error) {
+	return p.passReporitory.GetPassItemsCount(uid)
+}

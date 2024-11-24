@@ -102,9 +102,7 @@ a{
     border-radius: 20px;
     background-color: #f2f3f7;
     height: 50px;
-    /*width: 70px;*/
     padding: 0 5px;
-    margin-left: 210px;
     transition: background-color 0.2s linear;
 }
 
@@ -344,8 +342,10 @@ a{
 
 .cart-item-img{
     max-height: 100%;
-    max-width: 300px;
+    width: 300px;
     overflow:hidden;
+    display: flex;
+    justify-content: center;
 }
 
 .cart-item-img > img {
@@ -372,4 +372,9 @@ a{
     font-family: 'Gilroy', Arial, sans-serif;
     line-height: 1;
     font-weight: 900;
+}
+
+#draft_pass{
+    display: flex;
+    justify-content: center;
 }
