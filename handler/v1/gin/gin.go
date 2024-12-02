@@ -14,29 +14,41 @@ import (
 )
 
 func MainPage(
-	buildingsService *buildService.BuildService,
+	buildingsService *buildService.BuildingService,
 	passService *passService.PassService,
 ) func(
 	c *gin.Context,
 ) {
 	return func(c *gin.Context) {
-		passID, err := passService.GetPassID("0")
+		passID, err := passService.GetPassID(c, "0")
 		if err != nil {
 			fmt.Println(err.Error())
 		}
 
-		passItemsCount, err := passService.GetPassItemsCount(0)
+		passItemsCount, err := passService.GetPassItemsCount(c, "")
 
 		if strings.Contains(c.Request.URL.String(), "/?buildName=") {
 			decodedValue, err := url.QueryUnescape(c.Request.URL.String()[12:])
 			if err != nil {
 				fmt.Println(err.Error())
 			}
+			if decodedValue == "" {
+				c.HTML(
+					http.StatusOK, "mainPage.tmpl", gin.H{
+						"services": template.HTML(
+							buildingsService.GetAllBuildingsHTML(c),
+						),
+						"pass_id":          passID,
+						"pass_items_count": strconv.Itoa(passItemsCount),
+					},
+				)
+				return
+			}
 
 			c.HTML(
 				http.StatusOK, "mainPage.tmpl", gin.H{
 					"services": template.HTML(
-						buildingsService.GetBuilds(decodedValue),
+						buildingsService.FindBuildings(c, decodedValue),
 					),
 					"pass_id":          passID,
 					"findValue":        decodedValue,
@@ -49,8 +61,8 @@ func MainPage(
 		c.HTML(
 			http.StatusOK, "mainPage.tmpl", gin.H{
 				"services": template.HTML(
-					buildingsService.GetBuilds(
-						"",
+					buildingsService.GetAllBuildingsHTML(
+						c,
 					),
 				),
 				"pass_id":          passID,
@@ -66,9 +78,9 @@ func PassPage(
 	c *gin.Context,
 ) {
 	return func(c *gin.Context) {
-		id, _ := strconv.Atoi(c.Param("id"))
+		id := c.Param("id")
 
-		passHTML, err := passService.GetPassHTML(int64(id))
+		passHTML, err := passService.GetPassHTML(c, id)
 		if err != nil {
 			c.Status(404)
 
@@ -85,16 +97,16 @@ func PassPage(
 	}
 }
 
-func BuildPage(
-	buildingsService *buildService.BuildService,
+func BuildingPage(
+	buildingsService *buildService.BuildingService,
 ) func(
 	c *gin.Context,
 ) {
 	return func(c *gin.Context) {
-		id, _ := strconv.Atoi(c.Param("id"))
+		id := c.Param("id")
 
-		building, err := buildingsService.GetBuild(
-			int64(id),
+		building, err := buildingsService.GetBuilding(
+			c, id,
 		)
 
 		if err != nil {
@@ -115,9 +127,9 @@ func AddToPass(passService *passService.PassService) func(
 	c *gin.Context,
 ) {
 	return func(c *gin.Context) {
-		id, _ := strconv.Atoi(c.Param("id"))
+		id := c.Param("id")
 
-		passService.AddToPass(0, int64(id))
+		passService.AddToPass(c, "", id)
 
 		fmt.Println("Add to Pass build = ", id)
 		c.Redirect(http.StatusFound, "/")
@@ -126,9 +138,9 @@ func AddToPass(passService *passService.PassService) func(
 
 func DeletePass(passService *passService.PassService) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		id, _ := strconv.Atoi(c.Param("id"))
+		id := c.Param("id")
 
-		passService.Delete(int64(id))
+		passService.Delete(c, id)
 
 		fmt.Println("Delete pass, id = ", id)
 		c.Redirect(http.StatusFound, "/")

@@ -1,45 +1,86 @@
 package passService
 
 import (
+	"context"
 	"fmt"
-	passRepositoryPostgres "rip/repository/passes/postgres"
-	buildService "rip/service/build"
-	"strconv"
+	"github.com/google/uuid"
+	model "rip/domain"
+	postgresPasses "rip/repository/postgres/passes"
 	"time"
 )
 
 type PassService struct {
-	passReporitory      *passRepositoryPostgres.Storage
-	buildService        *buildService.BuildService
+	passProvider        PassProvider
+	passSaver           PassSaver
+	passDeleter         PassDeleter
 	buildImagesHostname string
 }
 
+type PassProvider interface {
+	ID(ctx context.Context, uid string) (string, error)
+	Pass(ctx context.Context, id string) (*model.PassModel, error)
+	DraftPassIDByCreator(
+		ctx context.Context,
+		uid string,
+	) (string, error)
+	ItemsCount(ctx context.Context, uid string) (
+		int,
+		error,
+	)
+}
+
+type PassSaver interface {
+	AddToPass(
+		ctx context.Context,
+		recordID string,
+		id string,
+		buildingID string,
+	) error
+	NewDraftPass(
+		ctx context.Context,
+		id string,
+		uid string,
+		visitor string,
+		visitDate time.Time,
+	) error
+}
+
+type PassDeleter interface {
+	Delete(ctx context.Context, id string) error
+}
+
 func New(
-	passReporitory *passRepositoryPostgres.Storage,
-	buildService *buildService.BuildService,
+	passReporitory *postgresPasses.Storage,
 	buildImagesHostname string,
 ) *PassService {
 	return &PassService{
-		passReporitory:      passReporitory,
-		buildService:        buildService,
+		passProvider:        passReporitory,
+		passSaver:           passReporitory,
 		buildImagesHostname: buildImagesHostname,
 	}
 }
 
-func (s *PassService) GetPassID(token string) (string, error) {
-	id, err := s.passReporitory.PassID(0)
+func (p *PassService) GetPassID(ctx context.Context, token string) (
+	string,
+	error,
+) {
+	userID := "0"
+
+	id, err := p.passProvider.ID(ctx, userID)
 	if err != nil {
 		return "", err
 	}
 
-	return strconv.Itoa(int(id)), nil
+	return id, nil
 }
 
 func (p *PassService) GetPassHTML(
-	id int64,
+	ctx context.Context,
+	id string,
 ) (*string, error) {
 	fmt.Println("getPassHTML service start")
-	pass, err := p.passReporitory.Pass(id)
+
+	pass, err := p.passProvider.Pass(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -50,23 +91,38 @@ func (p *PassService) GetPassHTML(
 	return pass.GetHMTL(&p.buildImagesHostname), nil
 }
 
-func (p *PassService) AddToPass(uid int64, build int64) error {
-	passID, err := p.passReporitory.FindDraftPassByCreator(uid)
+func (p *PassService) AddToPass(
+	ctx context.Context,
+	token string,
+	build string,
+) error {
+	userID := "0"
+
+	passID, err := p.passProvider.DraftPassIDByCreator(ctx, userID)
 	if err != nil {
-		passID, err = p.passReporitory.NewDraftPass(uid, "", time.Now())
+		passID = uuid.NewString()
+
+		err = p.passSaver.NewDraftPass(ctx, passID, userID, "", time.Now())
 		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
 	}
 
-	return p.passReporitory.AddToPass(passID, build)
+	recordID := uuid.NewString()
+
+	return p.passSaver.AddToPass(ctx, recordID, passID, build)
 }
 
-func (p *PassService) Delete(id int64) error {
-	return p.passReporitory.Delete(id)
+func (p *PassService) Delete(ctx context.Context, id string) error {
+	return p.passDeleter.Delete(ctx, id)
 }
 
-func (p *PassService) GetPassItemsCount(uid int64) (int, error) {
-	return p.passReporitory.GetPassItemsCount(uid)
+func (p *PassService) GetPassItemsCount(ctx context.Context, token string) (
+	int,
+	error,
+) {
+	userID := "0"
+
+	return p.passProvider.ItemsCount(ctx, userID)
 }

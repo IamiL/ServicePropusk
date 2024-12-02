@@ -1,7 +1,7 @@
 package model
 
 type BuildingModel struct {
-	Id          int64
+	Id          string
 	Name        string
 	Description string
 	ImgUrl      string

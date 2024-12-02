@@ -2,12 +2,11 @@ package model
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 )
 
 type PassModel struct {
-	ID          int64
+	ID          string
 	Items       PassItems
 	VisitorName string
 	DateVisit   time.Time
@@ -42,7 +41,7 @@ func (p *PassModel) GetHMTL(buildImagesHostname *string) *string {
         </div>
 		
 		<div>
-            <form action="delete_pass/` + strconv.Itoa(int(p.ID)) + `" method="post">
+            <form action="delete_pass/` + p.ID + `" method="post">
             <button type="submit">Удалить пропуск</button>
             </form>
         </div>
@@ -57,7 +56,11 @@ func (p *PassItems) getHtml(buildImagesHostname *string) *string {
 	fmt.Println("getHtml passItems, элементов: ", len(*p))
 
 	for _, passItem := range *p {
-		html += `<li><div class="cart-item-img"><img src="` + *buildImagesHostname + passItem.Building.ImgUrl + `"></div><div class="cart-item-desc"><div>Услуга: ` + passItem.Building.Name + `</div><div>Описание: ` + passItem.Building.Description + `</div></div><div class="cart-item-quantity">Комментарий: ` + passItem.Comment + `</div></li>` + "\n"
+		html += `<li><div class="cart-item-img"><img src="` + *buildImagesHostname + passItem.Building.ImgUrl +
+			`"></div><div class="cart-item-desc"><div>Услуга: ` + passItem.Building.Name +
+			`</div><div>Описание: ` + passItem.Building.Description +
+			`</div></div><div class="cart-item-quantity">Комментарий: ` + passItem.Comment +
+			`</div></li>` + "\n"
 	}
 
 	fmt.Println("getHtml passItems, возвращаем: ", html)

@@ -1,14 +1,14 @@
 package app
 
 import (
-	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	handler_gin_v1 "rip/handler/v1/gin"
-	buildRepositoryPostgres "rip/repository/builds/postgres"
-	passRepositoryPostgres "rip/repository/passes/postgres"
+	"rip/repository/postgres"
+	postgresBuilds "rip/repository/postgres/builds"
+	postgresPasses "rip/repository/postgres/passes"
+	s3Repository "rip/repository/s3"
 	buildService "rip/service/build"
 	passService "rip/service/pass"
 )
@@ -22,32 +22,25 @@ func New() *App {
 
 func (*App) MustRun() {
 	hostname := "http://localhost:9000"
+	buildsPhotosBucketName := ""
+	//buildsPhotosPath := "buildsMainPhotos"
 
-	postgresPool, err := pgxpool.New(
-		context.Background(),
-		fmt.Sprintf(
-			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-			"localhost",
-			"5432",
-			"iamil-admin",
-			"adminpass",
-			"service-propusk",
-		),
-	)
+	s3Repository.Connect("minio", "minio124", buildsPhotosBucketName)
+
+	postgresPool, err := postgres.NewConnPool()
 	if err != nil {
-		fmt.Println(err.Error())
-		return
+		log.Fatal(err)
 	}
 
 	defer postgresPool.Close()
 
-	buildRepository, err := buildRepositoryPostgres.New(postgresPool)
+	buildRepository, err := postgresBuilds.New(postgresPool)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
 
-	passRepository, err := passRepositoryPostgres.New(postgresPool)
+	passRepository, err := postgresPasses.New(postgresPool)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -55,11 +48,30 @@ func (*App) MustRun() {
 
 	buildService := buildService.New(buildRepository, hostname)
 
-	passService := passService.New(passRepository, buildService, hostname)
+	passService := passService.New(passRepository, hostname)
 
 	r := gin.Default()
 
 	r.LoadHTMLGlob("templates/*")
+
+	//r.GET(
+	//	"/syncs3BuildingsPhotos/", func(c *gin.Context) {
+	//		s3Session := s3Repository.Connect()
+	//		s3Repo := s3Repository.New(
+	//			s3Session,
+	//			buildsPhotosBucketName,
+	//			buildsPhotosPath,
+	//		)
+	//
+	//		if err := s3Repo.SyncBuildsPhotos(buildRepository); err != nil {
+	//			c.Data(
+	//				http.StatusOK,
+	//				"text/html; charset=utf-8",
+	//				[]byte("Error syncing builds photos: "+err.Error()),
+	//			)
+	//		}
+	//	},
+	//)
 
 	r.GET(
 		"/", handler_gin_v1.MainPage(buildService, passService),
@@ -70,7 +82,7 @@ func (*App) MustRun() {
 	)
 
 	r.GET(
-		"/buildings/:id", handler_gin_v1.BuildPage(buildService),
+		"/buildings/:id", handler_gin_v1.BuildingPage(buildService),
 	)
 
 	r.POST("/add_to_pass/:id", handler_gin_v1.AddToPass(passService))

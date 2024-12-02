@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS buildings (
-                                         id BIGINT PRIMARY KEY,
+                                         id uuid PRIMARY KEY,
                                          name TEXT NULL,
                                          description TEXT NULL,
                                          status BOOLEAN NOT NULL,
@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS buildings (
 );
 
 CREATE TABLE IF NOT EXISTS passes (
-                                      id BIGSERIAL PRIMARY KEY,
+                                      id uuid PRIMARY KEY,
                                       status INTEGER NOT NULL,
                                       creation_date TIMESTAMPTZ NOT NULL,
                                       creator INTEGER NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS passes (
 );
 
 CREATE TABLE IF NOT EXISTS buildings_passes (
-                                                id BIGSERIAL PRIMARY KEY,
+                                                id uuid PRIMARY KEY,
                                                 building INTEGER NOT NULL,
                                                 pass INTEGER NOT NULL,
                                                 comment TEXT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS buildings_passes (
 );
 
 CREATE TABLE IF NOT EXISTS users (
-                                     id BIGINT PRIMARY KEY,
+                                     id uuid PRIMARY KEY,
                                      login TEXT,
                                      password TEXT
 )
