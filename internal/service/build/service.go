@@ -3,8 +3,8 @@ package buildService
 import (
 	"context"
 	"fmt"
-	model "rip/domain"
-	postgresBuilds "rip/repository/postgres/builds"
+	model "rip/internal/domain"
+	postgresBuilds "rip/internal/repository/postgres/builds"
 	"strings"
 )
 

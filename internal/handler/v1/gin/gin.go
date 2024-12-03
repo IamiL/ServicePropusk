@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	buildService "rip/service/build"
-	passService "rip/service/pass"
+	buildService "rip/internal/service/build"
+	passService "rip/internal/service/pass"
 	"strconv"
 	"strings"
 )

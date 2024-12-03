@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	model "rip/domain"
-	postgresPasses "rip/repository/postgres/passes"
+	"rip/internal/consts"
+	model "rip/internal/domain"
+	postgresPasses "rip/internal/repository/postgres/passes"
 	"time"
 )
 
@@ -64,7 +65,7 @@ func (p *PassService) GetPassID(ctx context.Context, token string) (
 	string,
 	error,
 ) {
-	userID := "0"
+	userID := consts.UserID
 
 	id, err := p.passProvider.ID(ctx, userID)
 	if err != nil {
@@ -96,7 +97,7 @@ func (p *PassService) AddToPass(
 	token string,
 	build string,
 ) error {
-	userID := "0"
+	userID := consts.UserID
 
 	passID, err := p.passProvider.DraftPassIDByCreator(ctx, userID)
 	if err != nil {
@@ -122,7 +123,7 @@ func (p *PassService) GetPassItemsCount(ctx context.Context, token string) (
 	int,
 	error,
 ) {
-	userID := "0"
+	userID := consts.UserID
 
 	return p.passProvider.ItemsCount(ctx, userID)
 }

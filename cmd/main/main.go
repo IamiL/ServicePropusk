@@ -1,7 +1,7 @@
 package main
 
 import (
-	appService "rip/app"
+	appService "rip/internal/app"
 )
 
 func main() {

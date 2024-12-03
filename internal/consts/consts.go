@@ -1,0 +1,3 @@
+package consts
+
+const UserID = "5f36b100-087e-4f77-9867-1d600408e0e5"

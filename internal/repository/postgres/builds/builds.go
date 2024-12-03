@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	model "rip/domain"
+	model "rip/internal/domain"
 )
 
 type Storage struct {
@@ -77,4 +77,22 @@ func (s *Storage) Building(ctx context.Context, id string) (
 		)
 	}
 	return build, nil
+}
+
+func (s *Storage) EditImgUrl(
+	ctx context.Context,
+	id string,
+	url string,
+) error {
+	const op = "repository.services.postgres.EditImgUrl"
+
+	query := `UPDATE buildings SET img_url = $1 WHERE id = $2;`
+
+	_, err := s.db.Exec(ctx, query, url, id)
+	if err != nil {
+		return fmt.Errorf("unable to insert row: %w", err)
+	}
+
+	return nil
+
 }
