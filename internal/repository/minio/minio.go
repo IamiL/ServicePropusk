@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+	"io"
 	"log"
+	"mime/multipart"
 	"os"
 	model "rip/internal/domain"
 	postgresBuilds "rip/internal/repository/postgres/builds"
@@ -278,6 +280,30 @@ func getBuildID(builds []model.BuildingModel, name string) (string, error) {
 	}
 
 	return "", errors.New("build not found")
+}
+
+func (s *MinioRepository) SaveBuildingPreview(
+	ctx context.Context,
+	id string,
+	object io.Reader,
+) error {
+	//objectStat, err := object.Stat()
+	//if err != nil {
+	//	log.Fatalln(err)
+	//}
+
+	var ff multipart.File
+	if _, err := s.Session.PutObject(
+		ctx, s.BuildingsPhotosBucketName,
+		id+".png",
+		ff,
+		1000000000,
+		minio.PutObjectOptions{ContentType: "application/octet-stream"},
+	); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *MinioRepository) uploadPhoto(

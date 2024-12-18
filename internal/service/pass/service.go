@@ -2,18 +2,27 @@ package passService
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"rip/internal/consts"
 	model "rip/internal/domain"
-	postgresPasses "rip/internal/repository/postgres/passes"
 	"time"
+)
+
+const (
+	StatusDraft     = 0
+	StatusFormed    = 1
+	StatusReject    = 2
+	StatusCompleted = 3
+	StatusDeleted   = 4
 )
 
 type PassService struct {
 	passProvider        PassProvider
 	passSaver           PassSaver
 	passDeleter         PassDeleter
+	passEditor          PassEditor
 	buildImagesHostname string
 }
 
@@ -28,6 +37,7 @@ type PassProvider interface {
 		int,
 		error,
 	)
+	Passes(ctx context.Context, statusFilter *int) (*[]PassModel, error)
 }
 
 type PassSaver interface {
@@ -37,10 +47,11 @@ type PassSaver interface {
 		id string,
 		buildingID string,
 	) error
-	NewDraftPass(
+	NewPass(
 		ctx context.Context,
 		id string,
 		uid string,
+		status int,
 		visitor string,
 		visitDate time.Time,
 	) error
@@ -50,13 +61,49 @@ type PassDeleter interface {
 	Delete(ctx context.Context, id string) error
 }
 
+type PassEditor interface {
+	DeleteBuildingFromPass(
+		ctx context.Context,
+		buildingID string,
+		passId string,
+	) error
+
+	EditPass(
+		ctx context.Context,
+		id string,
+		visitor string,
+		visitDate time.Time,
+	) error
+
+	EditPassStatusByModerator(
+		ctx context.Context,
+		id string,
+		status int,
+		date time.Time,
+		moderatorId string,
+	) error
+
+	EditPassStatusByUser(
+		ctx context.Context,
+		id string,
+		status int,
+		date time.Time,
+	) error
+
+	EditWasVisitedForPass(
+		ctx context.Context,
+		id string,
+	) error
+}
+
 func New(
-	passReporitory *postgresPasses.Storage,
+	passProvider PassProvider,
+	passSaver PassSaver,
 	buildImagesHostname string,
 ) *PassService {
 	return &PassService{
-		passProvider:        passReporitory,
-		passSaver:           passReporitory,
+		passProvider:        passProvider,
+		passSaver:           passSaver,
 		buildImagesHostname: buildImagesHostname,
 	}
 }
@@ -75,24 +122,30 @@ func (p *PassService) GetPassID(ctx context.Context, token string) (
 	return id, nil
 }
 
-func (p *PassService) GetPassHTML(
+func (p *PassService) Pass(
 	ctx context.Context,
 	id string,
-) (*string, error) {
-	fmt.Println("getPassHTML service start")
+) (*model.PassModel, error) {
 
 	pass, err := p.passProvider.Pass(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	fmt.Println("getPassHTML service, builds in pass: ", len(pass.Items))
-	fmt.Println("getPassHTML service end")
+	fmt.Println("getPass service, builds in pass: ", len(pass.Items))
 
-	return pass.GetHMTL(&p.buildImagesHostname), nil
+	return pass, nil
 }
 
-func (p *PassService) AddToPass(
+func (p *PassService) DeleteBuildingFromPass(
+	ctx context.Context,
+	token string,
+	buildingId string,
+	passId string,
+) error {
+}
+
+func (p *PassService) AddBuildingToPass(
 	ctx context.Context,
 	token string,
 	build string,
@@ -103,7 +156,14 @@ func (p *PassService) AddToPass(
 	if err != nil {
 		passID = uuid.NewString()
 
-		err = p.passSaver.NewDraftPass(ctx, passID, userID, "", time.Now())
+		err = p.passSaver.NewPass(
+			ctx,
+			passID,
+			userID,
+			StatusDraft,
+			"",
+			time.Now(),
+		)
 		if err != nil {
 			fmt.Println(err.Error())
 			return err
@@ -115,8 +175,21 @@ func (p *PassService) AddToPass(
 	return p.passSaver.AddToPass(ctx, recordID, passID, build)
 }
 
-func (p *PassService) Delete(ctx context.Context, id string) error {
-	return p.passDeleter.Delete(ctx, id)
+func (p *PassService) Delete(
+	ctx context.Context,
+	token string,
+	id string,
+) error {
+	if err := p.passEditor.EditPassStatusByUser(
+		ctx,
+		id,
+		StatusDeleted,
+		time.Now(),
+	); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *PassService) GetPassItemsCount(ctx context.Context, token string) (
@@ -126,4 +199,114 @@ func (p *PassService) GetPassItemsCount(ctx context.Context, token string) (
 	userID := consts.UserID
 
 	return p.passProvider.ItemsCount(ctx, userID)
+}
+
+func (p *PassService) Passes(
+	ctx context.Context,
+	statusFilter *int,
+) (*[]PassModel, error) {
+	passes, err := p.passProvider.Passes(ctx, statusFilter)
+	if err != nil {
+		return nil, err
+	}
+
+	return passes, nil
+}
+
+type PassModel struct {
+	User        User
+	ID          string
+	VisitorName string
+	DateVisit   time.Time
+	Status      int
+}
+
+type User struct {
+	Id    string
+	Login string
+}
+
+func (p *PassService) EditPass(
+	ctx context.Context,
+	id string,
+	visitor string,
+	dateVisit time.Time,
+) error {
+	if err := p.passEditor.EditPass(ctx, id, visitor, dateVisit); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *PassService) ToForm(
+	ctx context.Context,
+	id string,
+) error {
+	pass, err := p.passProvider.Pass(ctx, id)
+	if err != nil {
+		return err
+	}
+	if pass.VisitorName == "" {
+		return errors.New("no visitor name")
+	}
+
+	if err := p.passEditor.EditPassStatusByUser(
+		ctx,
+		id,
+		StatusFormed,
+		time.Now(),
+	); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (p *PassService) RejectPass(
+	ctx context.Context,
+	token string,
+	id string,
+) error {
+	moderatorId := ""
+
+	time := time.Now()
+
+	if err := p.passEditor.EditPassStatusByModerator(
+		ctx, id, StatusReject, time, moderatorId,
+	); err != nil {
+		return err
+	}
+
+	if err := p.passEditor.EditWasVisitedForPass(
+		context.Background(),
+		id,
+	); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	return nil
+}
+
+func (p *PassService) CompletePass(
+	ctx context.Context,
+	token string,
+	id string,
+) error {
+	moderatorId := ""
+
+	if err := p.passEditor.EditPassStatusByModerator(
+		ctx, id, StatusCompleted, time.Now(), moderatorId,
+	); err != nil {
+		return err
+	}
+
+	if err := p.passEditor.EditWasVisitedForPass(
+		context.Background(),
+		id,
+	); err != nil {
+		fmt.Println(err.Error())
+	}
+
+	return nil
 }

@@ -8,6 +8,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	model "rip/internal/domain"
+	passService "rip/internal/service/pass"
+	"strconv"
 	"time"
 )
 
@@ -153,9 +155,9 @@ func (s *Storage) AddToPass(
 }
 
 func (s *Storage) Delete(ctx context.Context, id string) error {
-	query := `UPDATE passes SET status = 1 WHERE id = $1;`
+	query := `UPDATE passes SET status = 1, formation_date = $1 WHERE id = $2;`
 
-	_, err := s.db.Exec(ctx, query, id)
+	_, err := s.db.Exec(ctx, query, time.Now(), id)
 	if err != nil {
 		return fmt.Errorf("unable to insert row: %w", err)
 	}
@@ -163,14 +165,15 @@ func (s *Storage) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *Storage) NewDraftPass(
+func (s *Storage) NewPass(
 	ctx context.Context,
 	id string,
 	uid string,
+	status int,
 	visitor string,
 	visitDate time.Time,
 ) error {
-	query := `INSERT INTO passes (id, creator, creation_date, visitor, visit_date, status) VALUES ($1, $2, $3, $4, $5, 0);`
+	query := `INSERT INTO passes (id, creator, creation_date, visitor, visit_date, status) VALUES ($1, $2, $3, $4, $5, $6);`
 
 	if _, err := s.db.Exec(
 		ctx,
@@ -180,6 +183,7 @@ func (s *Storage) NewDraftPass(
 		time.Now(),
 		visitor,
 		visitDate,
+		status,
 	); err != nil {
 		return fmt.Errorf("unable to insert row: %w", err)
 	}
@@ -247,4 +251,43 @@ func (s *Storage) ItemsCount(ctx context.Context, uid string) (
 	}
 
 	return count, nil
+}
+
+func (s *Storage) Passes(ctx context.Context, statusFilter *int) (
+	*[]passService.PassModel,
+	error,
+) {
+	const op = "repository.passes.postgres.Passes"
+
+	var query string
+
+	if statusFilter != nil {
+		query = `SELECT p.id, u.login, p.visitor, p.visit_date, p.status FROM passes p JOIN users u ON p.creator = u.id WHERE p.status = ` + strconv.Itoa(*statusFilter)
+	} else {
+		query = `SELECT p.id, u.login, p.visitor, p.visit_date, p.status FROM passes p JOIN users u ON p.creator = u.id WHERE NOT p.status = 1 AND NOT p.status = 2`
+	}
+
+	rows, err := s.db.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: execute statement: %w", op, err)
+	}
+	defer rows.Close()
+
+	services := make([]passService.PassModel, 0)
+	for rows.Next() {
+		c := passService.PassModel{}
+		err := rows.Scan(
+			&c.ID,
+			&c.User.Username,
+			&c.VisitorName,
+			&c.DateVisit,
+			&c.Status,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("%s: execute statement: %w", op, err)
+		}
+		services = append(services, c)
+	}
+
+	return &services, nil
 }

@@ -2,26 +2,22 @@ package app
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"log"
-	"net/http"
-	handler_gin_v1 "rip/internal/handler/v1/gin"
+	"log/slog"
+	httpapp "rip/internal/app/http"
 	minioRepository "rip/internal/repository/minio"
 	"rip/internal/repository/postgres"
 	postgresBuilds "rip/internal/repository/postgres/builds"
 	postgresPasses "rip/internal/repository/postgres/passes"
 	buildService "rip/internal/service/build"
 	passService "rip/internal/service/pass"
+	userService "rip/internal/service/user"
 )
 
 type App struct {
+	HTTPServer *httpapp.App
 }
 
-func New() *App {
-	return &App{}
-}
-
-func (*App) MustRun() {
+func New(log *slog.Logger, config string) *App {
 	minioEndpoint := "localhost:9000"
 	accessKey := "minioadmin"
 	secretKey := "minioadmin"
@@ -29,8 +25,9 @@ func (*App) MustRun() {
 	staticFelisBucketName := "static"
 	buildsPhotosPath := "s3Files/buildsMainPhotos/"
 	staticFilesPath := "s3Files/static/"
+	port := 8080
 
-	hostname := "http://localhost:9000"
+	buildingsImageHostname := "http://localhost:9000"
 
 	s3Session, err := minioRepository.Connect(
 		minioEndpoint,
@@ -38,12 +35,12 @@ func (*App) MustRun() {
 		secretKey,
 	)
 	if err != nil {
-		log.Println("Error connecting to S3")
+		log.Error("Error connecting to S3")
 	}
 
 	postgresPool, err := postgres.NewConnPool()
 	if err != nil {
-		log.Fatal(err)
+		log.Error("", err)
 	}
 
 	defer postgresPool.Close()
@@ -51,13 +48,13 @@ func (*App) MustRun() {
 	buildRepository, err := postgresBuilds.New(postgresPool)
 	if err != nil {
 		fmt.Println(err.Error())
-		return
+		return nil
 	}
 
 	passRepository, err := postgresPasses.New(postgresPool)
 	if err != nil {
 		fmt.Println(err.Error())
-		return
+		return nil
 	}
 
 	s3Repo := minioRepository.New(
@@ -70,86 +67,26 @@ func (*App) MustRun() {
 	)
 
 	if err := s3Repo.ConfigureMinioStorage(); err != nil {
-		log.Fatal("configure minio storage fatal error:", err.Error())
+		log.Error("configure minio storage fatal error:", err.Error())
 
 	}
 
-	buildService := buildService.New(buildRepository, hostname)
+	buildingService := buildService.New(buildRepository, buildingsImageHostname)
 
-	passService := passService.New(passRepository, hostname)
-
-	r := gin.Default()
-
-	gin.SetMode(gin.ReleaseMode)
-
-	r.LoadHTMLGlob("internal/templates/*")
-
-	r.GET(
-		"/syncs3BuildingsPhotos/", func(c *gin.Context) {
-			if err := s3Repo.SyncBuildsPhotos(); err != nil {
-				c.Data(
-					http.StatusOK,
-					"text/html; charset=utf-8",
-					[]byte("Error syncing builds photos: "+err.Error()),
-				)
-
-				return
-			}
-
-			c.Data(
-				http.StatusOK,
-				"text/html; charset=utf-8",
-				[]byte("Updated builds photos success"),
-			)
-		},
+	passService := passService.New(
+		passRepository,
+		passRepository,
+		buildingsImageHostname,
 	)
 
-	r.GET(
-		"/printbuildingsbucketpolicy", func(c *gin.Context) {
-			s3Repo.PrintBuilbingsBucketPolice()
-			c.Data(
-				http.StatusOK,
-				"text/html; charset=utf-8",
-				[]byte("policy printed"),
-			)
-		},
+	userService := userService.New()
+
+	httpApp := httpapp.New(
+		log,
+		port,
+		buildingService,
+		passService,
+		userService,
 	)
-
-	r.GET(
-		"/printstaticbucketpolicy", func(c *gin.Context) {
-			s3Repo.PrintStaticBucketPolice()
-			c.Data(
-				http.StatusOK,
-				"text/html; charset=utf-8",
-				[]byte("policy printed"),
-			)
-		},
-	)
-
-	r.GET(
-		"/", handler_gin_v1.MainPage(buildService, passService),
-	)
-
-	r.GET(
-		"/pass/:id", handler_gin_v1.PassPage(passService),
-	)
-
-	r.GET(
-		"/buildings/:id", handler_gin_v1.BuildingPage(buildService),
-	)
-
-	r.POST("/add_to_pass/:id", handler_gin_v1.AddToPass(passService))
-
-	r.POST("/pass/delete_pass/:id", handler_gin_v1.DeletePass(passService))
-
-	r.Static("/image", "./static/images")
-	r.Static("/style", "./static/styles")
-
-	log.Println("Server start up")
-
-	if err := r.Run(); err != nil {
-		log.Fatalf(err.Error())
-	}
-
-	log.Println("Server down")
+	return &App{HTTPServer: httpApp}
 }

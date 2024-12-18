@@ -6,15 +6,15 @@ import (
 )
 
 type PassModel struct {
-	ID          string
-	Items       PassItems
-	VisitorName string
-	DateVisit   time.Time
+	ID          string    `json:"id"`
+	Items       PassItems `json:"items"`
+	VisitorName string    `json:"visitor_name"`
+	DateVisit   time.Time `json:"date_visit"`
 }
 
 type PassItem struct {
-	Building *BuildingModel
-	Comment  string
+	Building *BuildingModel `json:"building"`
+	Comment  string         `json:"comment"`
 }
 
 type PassItems []*PassItem

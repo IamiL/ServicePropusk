@@ -9,10 +9,10 @@ CREATE TABLE IF NOT EXISTS buildings (
 CREATE TABLE IF NOT EXISTS passes (
                                       id uuid PRIMARY KEY,
                                       status INTEGER NOT NULL,
-                                      creation_date TIMESTAMPTZ NOT NULL,
+                                      created_at TIMESTAMPTZ NOT NULL,
                                       creator uuid NOT NULL,
-                                      formation_date TIMESTAMPTZ NULL,
-                                      completion_date TIMESTAMPTZ NULL,
+                                      formed_at TIMESTAMPTZ NULL,
+                                      completed_at TIMESTAMPTZ NULL,
                                       moderator INTEGER NULL,
                                       visitor TEXT NULL,
                                       visit_date TIMESTAMPTZ NULL
@@ -30,5 +30,5 @@ CREATE TABLE IF NOT EXISTS buildings_passes (
 CREATE TABLE IF NOT EXISTS users (
                                      id uuid PRIMARY KEY,
                                      login TEXT,
-                                     password TEXT
+                                     pass_hash TEXT
 )

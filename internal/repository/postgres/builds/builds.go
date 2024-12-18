@@ -96,3 +96,47 @@ func (s *Storage) EditImgUrl(
 	return nil
 
 }
+
+func (s *Storage) EditBuildingInfo(
+	ctx context.Context,
+	building *model.BuildingModel,
+) error {
+	const op = "repository.services.postgres.EditBuilding"
+
+	query := `UPDATE buildings SET name = $1, description = $2 WHERE id = $3;`
+
+	_, err := s.db.Exec(
+		ctx,
+		query,
+		building.Name,
+		building.Description,
+		building.Id,
+	)
+	if err != nil {
+		return fmt.Errorf("unable to insert row: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Storage) EditBuildingStatus(
+	ctx context.Context,
+	id string,
+	status bool,
+) error {
+	const op = "repository.services.postgres.EditBuilding"
+
+	query := `UPDATE buildings SET status = $1 WHERE id = $2;`
+
+	_, err := s.db.Exec(
+		ctx,
+		query,
+		status,
+		id,
+	)
+	if err != nil {
+		return fmt.Errorf("unable to insert row: %w", err)
+	}
+
+	return nil
+}
