@@ -1,14 +1,12 @@
-package handler_mux_v1
+package buildinghandler
 
 import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 	model "rip/internal/domain"
 	buildService "rip/internal/service/build"
 	passService "rip/internal/service/pass"
-	"strings"
 )
 
 type BuildingsResp struct {
@@ -24,6 +22,7 @@ func BuildingsHandler(
 	w http.ResponseWriter, r *http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("BuildingsHandler")
 		passID, err := passService.GetPassID(r.Context(), "0")
 		if err != nil {
 			fmt.Println(err.Error())
@@ -36,12 +35,12 @@ func BuildingsHandler(
 
 		var buildings *[]model.BuildingModel
 
-		if strings.Contains(r.URL.String(), "?buildName=") {
-			decodedValue, err := url.QueryUnescape(r.URL.String()[11:])
-			if err != nil {
-				fmt.Println(err.Error())
-			}
+		params := r.URL.Query()
 
+		if params.Get("buildName") != "" {
+			decodedValue := params.Get("buildName")
+			fmt.Println("decoded value:")
+			fmt.Println(decodedValue)
 			buildings, err = buildingsService.FindBuildings(
 				r.Context(),
 				decodedValue,
@@ -91,6 +90,7 @@ func BuildingHandler(
 	w http.ResponseWriter, r *http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("BuildingsHandler2")
 		id := r.PathValue("id")
 
 		building, err := buildingsService.GetBuilding(r.Context(), id)

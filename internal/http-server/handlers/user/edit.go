@@ -1,11 +1,11 @@
-package handler_mux_v1
+package userHandler
 
 import "net/http"
 
 // Create a struct that models the structure of a user in the request body
 func EditUserHandler() func(http.ResponseWriter, *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		c, err := r.Cookie("session_token")
+		_, err := r.Cookie("session_token")
 		if err != nil {
 			if err == http.ErrNoCookie {
 				// If the cookie is not set, return an unauthorized status
@@ -17,7 +17,7 @@ func EditUserHandler() func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		sessionToken := c.Value
+		//sessionToken := c.Value
 
 	}
 }

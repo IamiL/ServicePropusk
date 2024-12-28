@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS passes (
                                       creator uuid NOT NULL,
                                       formed_at TIMESTAMPTZ NULL,
                                       completed_at TIMESTAMPTZ NULL,
-                                      moderator INTEGER NULL,
+                                      moderator uuid NULL,
                                       visitor TEXT NULL,
                                       visit_date TIMESTAMPTZ NULL
 );
@@ -32,3 +32,4 @@ CREATE TABLE IF NOT EXISTS users (
                                      login TEXT,
                                      pass_hash TEXT
 )
+

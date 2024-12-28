@@ -1,6 +1,9 @@
-package inMemory
+package inMemorySession
 
-import "time"
+import (
+	"errors"
+	"time"
+)
 
 var sessions = map[string]session{}
 
@@ -16,6 +19,20 @@ type TokenStore struct {
 
 func New() *TokenStore {
 	return &TokenStore{sessions: make(map[string]session)}
+}
+
+func (s *TokenStore) Get(token string) (string, error) {
+	return "", errors.New("Not implemented")
+}
+func (s *TokenStore) NewSession(
+	uid string,
+	sessionToken string,
+	expiresAt time.Time,
+) error {
+	return errors.New("Not implemented")
+}
+func (s *TokenStore) DeleteSession(uid string) error {
+	return errors.New("Not implemented")
 }
 
 func (s session) isExpired() bool {

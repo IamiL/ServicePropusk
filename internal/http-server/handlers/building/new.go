@@ -1,7 +1,8 @@
-package handler_mux_v1
+package buildinghandler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	buildService "rip/internal/service/build"
 )
@@ -17,6 +18,7 @@ func NewBuildingHandler(
 	w http.ResponseWriter, r *http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("BuildingsHandler3")
 		var req NewBuildingReq
 
 		err := json.NewDecoder(r.Body).Decode(&req)

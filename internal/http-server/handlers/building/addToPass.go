@@ -1,4 +1,4 @@
-package handler_mux_v1
+package buildinghandler
 
 import (
 	"log/slog"

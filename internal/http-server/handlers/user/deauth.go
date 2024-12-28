@@ -1,11 +1,11 @@
-package handler_mux_v1
+package userHandler
 
 import (
 	"net/http"
 	userService "rip/internal/service/user"
 )
 
-func DeauthorizationHandler(uService userService.UserService) func(
+func DeauthorizationHandler(uService *userService.UserService) func(
 	http.ResponseWriter,
 	*http.Request,
 ) {

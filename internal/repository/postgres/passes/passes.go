@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/jackc/pgx/v5/pgxpool"
 	model "rip/internal/domain"
 	passService "rip/internal/service/pass"
 	"strconv"
@@ -14,10 +13,10 @@ import (
 )
 
 type Storage struct {
-	db *pgxpool.Pool
+	db *pgx.Conn
 }
 
-func New(pool *pgxpool.Pool) (*Storage, error) {
+func New(pool *pgx.Conn) (*Storage, error) {
 	return &Storage{db: pool}, nil
 }
 
@@ -173,7 +172,7 @@ func (s *Storage) NewPass(
 	visitor string,
 	visitDate time.Time,
 ) error {
-	query := `INSERT INTO passes (id, creator, creation_date, visitor, visit_date, status) VALUES ($1, $2, $3, $4, $5, $6);`
+	query := `INSERT INTO passes (id, creator, created_at, visitor, visit_date, status) VALUES ($1, $2, $3, $4, $5, $6);`
 
 	if _, err := s.db.Exec(
 		ctx,
@@ -253,10 +252,11 @@ func (s *Storage) ItemsCount(ctx context.Context, uid string) (
 	return count, nil
 }
 
-func (s *Storage) Passes(ctx context.Context, statusFilter *int) (
-	*[]passService.PassModel,
-	error,
-) {
+func (s *Storage) Passes(
+	ctx context.Context, statusFilter *int,
+	beginDateFilter *time.Time,
+	endDateFilter *time.Time,
+) (*[]passService.PassModel, error) {
 	const op = "repository.passes.postgres.Passes"
 
 	var query string
@@ -264,10 +264,23 @@ func (s *Storage) Passes(ctx context.Context, statusFilter *int) (
 	if statusFilter != nil {
 		query = `SELECT p.id, u.login, p.visitor, p.visit_date, p.status FROM passes p JOIN users u ON p.creator = u.id WHERE p.status = ` + strconv.Itoa(*statusFilter)
 	} else {
-		query = `SELECT p.id, u.login, p.visitor, p.visit_date, p.status FROM passes p JOIN users u ON p.creator = u.id WHERE NOT p.status = 1 AND NOT p.status = 2`
+		query = `SELECT p.id, u.login, p.visitor, p.visit_date, p.status FROM passes p JOIN users u ON p.creator = u.id WHERE NOT p.status = 0 AND NOT p.status = 4`
 	}
 
-	rows, err := s.db.Query(ctx, query)
+	if beginDateFilter != nil {
+		query += ` AND p.formed_at >= @beginDate`
+	}
+
+	if endDateFilter != nil {
+		query += ` AND p.formed_at <= @endDate`
+	}
+
+	args := pgx.NamedArgs{
+		"beginDate": beginDateFilter,
+		"endDate":   endDateFilter,
+	}
+	fmt.Println(query)
+	rows, err := s.db.Query(ctx, query, args)
 	if err != nil {
 		return nil, fmt.Errorf("%s: execute statement: %w", op, err)
 	}
@@ -278,7 +291,7 @@ func (s *Storage) Passes(ctx context.Context, statusFilter *int) (
 		c := passService.PassModel{}
 		err := rows.Scan(
 			&c.ID,
-			&c.User.Username,
+			&c.User.Login,
 			&c.VisitorName,
 			&c.DateVisit,
 			&c.Status,
@@ -290,4 +303,77 @@ func (s *Storage) Passes(ctx context.Context, statusFilter *int) (
 	}
 
 	return &services, nil
+}
+
+func (s *Storage) DeleteBuildingFromPass(
+	ctx context.Context,
+	buildingID string,
+	passId string,
+) error {
+	query := `DELETE from buildings_passes WHERE building = &1 AND pass = &2`
+
+	_, err := s.db.Exec(ctx, query, buildingID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Storage) EditPass(
+	ctx context.Context,
+	id string,
+	visitor string,
+	visitDate time.Time,
+) error {
+	query := `UPDATE passes SET visitor = $1, visit_date = $2 WHERE id = $3;`
+
+	_, err := s.db.Exec(ctx, query, visitor, visitDate, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) EditPassStatusByModerator(
+	ctx context.Context,
+	id string,
+	status int,
+	time time.Time,
+	moderatorId string,
+) error {
+	query := `UPDATE passes SET status = $1, moderator = $2, completed_at = &3 WHERE id = $4;`
+
+	_, err := s.db.Exec(ctx, query, status, moderatorId, time)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Storage) EditPassStatusByUser(
+	ctx context.Context,
+	id string,
+	status int,
+	time time.Time,
+) error {
+	query := `UPDATE passes SET status = $1, formed_at = $2 WHERE id = $3;`
+
+	_, err := s.db.Exec(ctx, query, status, time, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) EditWasVisitedForPass(ctx context.Context, id string) error {
+	query := `UPDATE buildings_passes SET was_used = true WHERE pass = $1;`
+
+	_, err := s.db.Exec(ctx, query, id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

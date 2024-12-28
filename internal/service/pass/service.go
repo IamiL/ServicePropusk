@@ -37,7 +37,11 @@ type PassProvider interface {
 		int,
 		error,
 	)
-	Passes(ctx context.Context, statusFilter *int) (*[]PassModel, error)
+	Passes(
+		ctx context.Context, statusFilter *int,
+		beginDateFilter *time.Time,
+		endDateFilter *time.Time,
+	) (*[]PassModel, error)
 }
 
 type PassSaver interface {
@@ -79,7 +83,7 @@ type PassEditor interface {
 		ctx context.Context,
 		id string,
 		status int,
-		date time.Time,
+		time time.Time,
 		moderatorId string,
 	) error
 
@@ -87,7 +91,7 @@ type PassEditor interface {
 		ctx context.Context,
 		id string,
 		status int,
-		date time.Time,
+		time time.Time,
 	) error
 
 	EditWasVisitedForPass(
@@ -99,11 +103,15 @@ type PassEditor interface {
 func New(
 	passProvider PassProvider,
 	passSaver PassSaver,
+	passDeleter PassDeleter,
+	passEditor PassEditor,
 	buildImagesHostname string,
 ) *PassService {
 	return &PassService{
 		passProvider:        passProvider,
 		passSaver:           passSaver,
+		passDeleter:         passDeleter,
+		passEditor:          passEditor,
 		buildImagesHostname: buildImagesHostname,
 	}
 }
@@ -143,6 +151,12 @@ func (p *PassService) DeleteBuildingFromPass(
 	buildingId string,
 	passId string,
 ) error {
+	err := p.passEditor.DeleteBuildingFromPass(ctx, buildingId, passId)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (p *PassService) AddBuildingToPass(
@@ -204,8 +218,13 @@ func (p *PassService) GetPassItemsCount(ctx context.Context, token string) (
 func (p *PassService) Passes(
 	ctx context.Context,
 	statusFilter *int,
+	beginDateFilter *time.Time,
+	endDateFilter *time.Time,
 ) (*[]PassModel, error) {
-	passes, err := p.passProvider.Passes(ctx, statusFilter)
+	passes, err := p.passProvider.Passes(
+		ctx, statusFilter, beginDateFilter,
+		endDateFilter,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -233,6 +252,7 @@ func (p *PassService) EditPass(
 	dateVisit time.Time,
 ) error {
 	if err := p.passEditor.EditPass(ctx, id, visitor, dateVisit); err != nil {
+		fmt.Println("err: ", err.Error())
 		return err
 	}
 

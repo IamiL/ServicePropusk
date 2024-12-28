@@ -1,14 +1,13 @@
 package minioRepository
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"io"
 	"log"
-	"mime/multipart"
 	"os"
 	model "rip/internal/domain"
 	postgresBuilds "rip/internal/repository/postgres/builds"
@@ -175,7 +174,7 @@ func (s *MinioRepository) ConfigureMinioStorage() error {
 }
 
 func (s *MinioRepository) SyncBuildsPhotos() error {
-	buildings, err := s.buildingsRepo.Buildings(context.Background())
+	buildings, err := s.buildingsRepo.AllBuildings(context.Background())
 	if err != nil {
 		return err
 	}
@@ -285,21 +284,25 @@ func getBuildID(builds []model.BuildingModel, name string) (string, error) {
 func (s *MinioRepository) SaveBuildingPreview(
 	ctx context.Context,
 	id string,
-	object io.Reader,
+	object []byte,
 ) error {
+	fmt.Println("8")
 	//objectStat, err := object.Stat()
 	//if err != nil {
 	//	log.Fatalln(err)
 	//}
 
-	var ff multipart.File
+	//var ff multipart.File
+
+	reader := bytes.NewReader(object)
 	if _, err := s.Session.PutObject(
 		ctx, s.BuildingsPhotosBucketName,
 		id+".png",
-		ff,
-		1000000000,
+		reader,
+		int64(len(object)),
 		minio.PutObjectOptions{ContentType: "application/octet-stream"},
 	); err != nil {
+		fmt.Println("err: ", err.Error())
 		return err
 	}
 
@@ -391,4 +394,27 @@ func (s *MinioRepository) PrintStaticBucketPolice() {
 	log.Print("policy:")
 
 	log.Print(policy)
+}
+
+func (s *MinioRepository) DeleteBuildingPreview(
+	ctx context.Context,
+	id string,
+) error {
+	opts := minio.RemoveObjectOptions{
+		GovernanceBypass: true,
+	}
+
+	fmt.Println("6")
+	err := s.Session.RemoveObject(
+		context.Background(),
+		s.BuildingsPhotosBucketName,
+		id+`.png`,
+		opts,
+	)
+	if err != nil {
+		fmt.Println()
+		return err
+	}
+
+	return nil
 }

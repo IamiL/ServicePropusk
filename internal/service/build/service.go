@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	"io"
 	model "rip/internal/domain"
 	postgresBuilds "rip/internal/repository/postgres/builds"
 )
@@ -20,7 +19,11 @@ type BuildingService struct {
 
 type BuildingProvider interface {
 	Building(ctx context.Context, id string) (model.BuildingModel, error)
-	Buildings(ctx context.Context) (
+	AllBuildings(ctx context.Context) (
+		[]model.BuildingModel,
+		error,
+	)
+	FindBuildings(ctx context.Context, name string) (
 		[]model.BuildingModel,
 		error,
 	)
@@ -47,16 +50,24 @@ type s3BuildingSaver interface {
 	SaveBuildingPreview(
 		ctx context.Context,
 		id string,
-		object io.Reader,
+		object []byte,
 	) error
 }
 
 func New(
 	buildingRep *postgresBuilds.Storage,
+	bSaver BuildingSaver,
+	bEditor BuildingEditor,
+	s3bDeleter s3BuildingDeleter,
+	s3bSaver s3BuildingSaver,
 	buildImagesHostname string,
 ) *BuildingService {
 	return &BuildingService{
 		bProvider:           buildingRep,
+		bSaver:              bSaver,
+		bEditor:             bEditor,
+		s3bDeleter:          s3bDeleter,
+		s3bSaver:            s3bSaver,
 		buildImagesHostname: buildImagesHostname,
 	}
 }
@@ -64,7 +75,7 @@ func New(
 func (s *BuildingService) GetAllBuildings(
 	ctx context.Context,
 ) (*[]model.BuildingModel, error) {
-	buildings, err := s.bProvider.Buildings(ctx)
+	buildings, err := s.bProvider.AllBuildings(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
@@ -81,7 +92,7 @@ func (s *BuildingService) FindBuildings(
 		return s.GetAllBuildings(ctx)
 	}
 
-	buildings, err := s.bProvider.Buildings(ctx)
+	buildings, err := s.bProvider.FindBuildings(ctx, buildingName)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
@@ -146,12 +157,15 @@ func (s *BuildingService) DeleteBuilding(ctx context.Context, id string) error {
 func (s *BuildingService) EditBuildingPreview(
 	ctx context.Context,
 	id string,
-	photo io.Reader,
+	photo []byte,
 ) error {
+
+	fmt.Println("5")
 	if err := s.s3bDeleter.DeleteBuildingPreview(ctx, id); err != nil {
 		//return err
 	}
 
+	fmt.Println("7")
 	if err := s.s3bSaver.SaveBuildingPreview(ctx, id, photo); err != nil {
 		return err
 	}

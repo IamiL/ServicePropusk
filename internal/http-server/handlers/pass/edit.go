@@ -1,4 +1,4 @@
-package handler_mux_v1
+package passhandler
 
 import (
 	"encoding/json"
@@ -12,7 +12,7 @@ type EditPassRequest struct {
 	DateVisit time.Time `json:"date_visit"`
 }
 
-func EditPassHandler(pService passService.PassService) func(
+func EditPassHandler(pService *passService.PassService) func(
 	http.ResponseWriter,
 	*http.Request,
 ) {

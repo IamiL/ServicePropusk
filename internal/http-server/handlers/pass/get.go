@@ -1,4 +1,4 @@
-package handler_mux_v1
+package passhandler
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	passService "rip/internal/service/pass"
 	"strconv"
 	"time"
+	"unicode/utf8"
 )
 
 type PassResponse struct {
@@ -19,10 +20,9 @@ type PassResponse struct {
 
 type User struct {
 	Login string `json:"login"`
-	ID    string `json:"id"`
 }
 
-func PassesHandler(pService passService.PassService) func(
+func PassesHandler(pService *passService.PassService) func(
 	http.ResponseWriter,
 	*http.Request,
 ) {
@@ -40,7 +40,90 @@ func PassesHandler(pService passService.PassService) func(
 			}
 		}
 
-		passes, err := pService.Passes(r.Context(), statusFilter)
+		var beginDateFilter *time.Time = nil
+
+		if params.Get("begin_date") != "" {
+			beginDateFilterStr := params.Get("begin_date")
+			if utf8.RuneCountInString(beginDateFilterStr) < 10 {
+
+			} else {
+				day, err := strconv.Atoi(beginDateFilterStr[0:2])
+				if err != nil {
+					fmt.Println("day: ", beginDateFilterStr[0:2])
+					fmt.Println(err)
+				}
+
+				month, err := strconv.Atoi(beginDateFilterStr[3:5])
+				if err != nil {
+					fmt.Println("month: ", beginDateFilterStr[3:5])
+					fmt.Println(err)
+				}
+
+				year, err := strconv.Atoi(beginDateFilterStr[6:10])
+				if err != nil {
+					fmt.Println("year: ", beginDateFilterStr[6:10])
+				}
+
+				timeTemp := time.Date(
+					year,
+					time.Month(month),
+					day,
+					23,
+					59,
+					59,
+					7,
+					time.UTC,
+				)
+
+				beginDateFilter = &timeTemp
+			}
+		}
+
+		var endDateFilter *time.Time = nil
+
+		if params.Get("end_date") != "" {
+			endDateFilterStr := params.Get("end_date")
+			if utf8.RuneCountInString(endDateFilterStr) < 10 {
+
+			} else {
+				day, err := strconv.Atoi(endDateFilterStr[0:2])
+				if err != nil {
+					fmt.Println("day: ", endDateFilterStr[0:2])
+					fmt.Println(err)
+				}
+
+				month, err := strconv.Atoi(endDateFilterStr[3:5])
+				if err != nil {
+					fmt.Println("month: ", endDateFilterStr[3:5])
+					fmt.Println(err)
+				}
+
+				year, err := strconv.Atoi(endDateFilterStr[6:10])
+				if err != nil {
+					fmt.Println("year: ", endDateFilterStr[6:10])
+				}
+
+				timeTemp := time.Date(
+					year,
+					time.Month(month),
+					day,
+					23,
+					59,
+					59,
+					7,
+					time.UTC,
+				)
+
+				endDateFilter = &timeTemp
+			}
+		}
+
+		passes, err := pService.Passes(
+			r.Context(),
+			statusFilter,
+			beginDateFilter,
+			endDateFilter,
+		)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -52,7 +135,7 @@ func PassesHandler(pService passService.PassService) func(
 			resp = append(
 				resp,
 				PassResponse{
-					User{p.User.Login, p.User.Id},
+					User{p.User.Login},
 					p.ID,
 					p.VisitorName,
 					p.DateVisit,
@@ -77,7 +160,7 @@ func PassesHandler(pService passService.PassService) func(
 	}
 }
 
-func PassHandler(pService passService.PassService) func(
+func PassHandler(pService *passService.PassService) func(
 	http.ResponseWriter,
 	*http.Request,
 ) {

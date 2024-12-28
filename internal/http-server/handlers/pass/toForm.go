@@ -1,11 +1,11 @@
-package handler_mux_v1
+package passhandler
 
 import (
 	"net/http"
 	passService "rip/internal/service/pass"
 )
 
-func ToFormHandler(pService passService.PassService) func(
+func ToFormHandler(pService *passService.PassService) func(
 	http.ResponseWriter,
 	*http.Request,
 ) {

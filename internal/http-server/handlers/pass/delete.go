@@ -1,11 +1,11 @@
-package handler_mux_v1
+package passhandler
 
 import (
 	"net/http"
 	passService "rip/internal/service/pass"
 )
 
-func DeletePassHandler(pService passService.PassService) func(
+func DeletePassHandler(pService *passService.PassService) func(
 	http.ResponseWriter, *http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {

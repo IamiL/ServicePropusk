@@ -5,25 +5,59 @@ import (
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	model "rip/internal/domain"
 )
 
 type Storage struct {
-	db *pgxpool.Pool
+	db *pgx.Conn
 }
 
-func New(pool *pgxpool.Pool) (*Storage, error) {
+func New(pool *pgx.Conn) (*Storage, error) {
 	return &Storage{db: pool}, nil
 }
 
-func (s *Storage) Buildings(ctx context.Context) (
+func (s *Storage) AllBuildings(ctx context.Context) (
 	[]model.BuildingModel,
 	error,
 ) {
 	const op = "repository.services.postgres.Buildings"
 
 	query := `SELECT id, name, description, img_url FROM buildings WHERE status = 'true'`
+
+	rows, err := s.db.Query(context.TODO(), query)
+	if err != nil {
+		return nil, fmt.Errorf("%s: execute statement: %w", op, err)
+	}
+	defer rows.Close()
+
+	services := []model.BuildingModel{}
+	for rows.Next() {
+		c := model.BuildingModel{}
+		err := rows.Scan(
+			&c.Id,
+			&c.Name,
+			&c.Description,
+			&c.ImgUrl,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("%s: execute statement: %w", op, err)
+		}
+		services = append(services, c)
+	}
+
+	return services, nil
+}
+
+func (s *Storage) FindBuildings(ctx context.Context, name string) (
+	[]model.BuildingModel,
+	error,
+) {
+	const op = "repository.services.postgres.Buildings"
+
+	query := `SELECT id, name, description, img_url FROM buildings WHERE status = 'true' AND name LIKE '%` + name + `%' `
+
+	fmt.Println("query: ")
+	fmt.Println(query)
 
 	rows, err := s.db.Query(context.TODO(), query)
 	if err != nil {
@@ -136,6 +170,28 @@ func (s *Storage) EditBuildingStatus(
 	)
 	if err != nil {
 		return fmt.Errorf("unable to insert row: %w", err)
+	}
+
+	return nil
+}
+
+func (s *Storage) SaveBuilding(
+	ctx context.Context,
+	building *model.BuildingModel,
+) error {
+	query := `INSERT INTO buildings (id, name, description, status, img_url) VALUES ($1, $2, $3, $4, $5);`
+
+	_, err := s.db.Exec(
+		ctx,
+		query,
+		building.Id,
+		building.Name,
+		building.Description,
+		true,
+		"/",
+	)
+	if err != nil {
+		return err
 	}
 
 	return nil

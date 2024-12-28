@@ -1,4 +1,4 @@
-package handler_mux_v1
+package userHandler
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ type RegistrationRequest struct {
 	Login    string `json:"login"`
 }
 
-func RegistrationHandler(uService userService.UserService) func(
+func RegistrationHandler(uService *userService.UserService) func(
 	http.ResponseWriter,
 	*http.Request,
 ) {

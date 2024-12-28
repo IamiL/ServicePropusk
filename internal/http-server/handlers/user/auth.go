@@ -1,4 +1,4 @@
-package handler_mux_v1
+package userHandler
 
 import (
 	"encoding/json"
@@ -11,7 +11,7 @@ type Credentials struct {
 	Login    string `json:"login"`
 }
 
-func SigninHandler(uService userService.UserService) func(
+func SigninHandler(uService *userService.UserService) func(
 	http.ResponseWriter,
 	*http.Request,
 ) {

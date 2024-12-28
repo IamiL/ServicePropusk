@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"log/slog"
 	httpapp "rip/internal/app/http"
+	inMemorySession "rip/internal/repository/inMemory"
 	minioRepository "rip/internal/repository/minio"
 	"rip/internal/repository/postgres"
 	postgresBuilds "rip/internal/repository/postgres/builds"
 	postgresPasses "rip/internal/repository/postgres/passes"
+	postgresUser "rip/internal/repository/postgres/user"
 	buildService "rip/internal/service/build"
 	passService "rip/internal/service/pass"
 	userService "rip/internal/service/user"
@@ -19,12 +21,12 @@ type App struct {
 
 func New(log *slog.Logger, config string) *App {
 	minioEndpoint := "localhost:9000"
-	accessKey := "minioadmin"
-	secretKey := "minioadmin"
+	accessKey := "minioadminaccesskey"
+	secretKey := "iamilpass"
 	buildingsPhotosBucketName := "services"
 	staticFelisBucketName := "static"
-	buildsPhotosPath := "s3Files/buildsMainPhotos/"
-	staticFilesPath := "s3Files/static/"
+	buildsPhotosPath := "data/s3Files/buildsMainPhotos/"
+	staticFilesPath := "data/s3Files/static/"
 	port := 8080
 
 	buildingsImageHostname := "http://localhost:9000"
@@ -43,7 +45,9 @@ func New(log *slog.Logger, config string) *App {
 		log.Error("", err)
 	}
 
-	defer postgresPool.Close()
+	tokenStore := inMemorySession.New()
+
+	//defer postgresPool.Close(context.Background())
 
 	buildRepository, err := postgresBuilds.New(postgresPool)
 	if err != nil {
@@ -57,6 +61,8 @@ func New(log *slog.Logger, config string) *App {
 		return nil
 	}
 
+	userRepository, _ := postgresUser.New(postgresPool)
+
 	s3Repo := minioRepository.New(
 		s3Session,
 		buildingsPhotosBucketName,
@@ -66,20 +72,24 @@ func New(log *slog.Logger, config string) *App {
 		buildRepository,
 	)
 
-	if err := s3Repo.ConfigureMinioStorage(); err != nil {
-		log.Error("configure minio storage fatal error:", err.Error())
-
-	}
-
-	buildingService := buildService.New(buildRepository, buildingsImageHostname)
+	buildingService := buildService.New(
+		buildRepository,
+		buildRepository,
+		buildRepository,
+		s3Repo,
+		s3Repo,
+		buildingsImageHostname,
+	)
 
 	passService := passService.New(
+		passRepository,
+		passRepository,
 		passRepository,
 		passRepository,
 		buildingsImageHostname,
 	)
 
-	userService := userService.New()
+	userService := userService.New(tokenStore, userRepository, userRepository)
 
 	httpApp := httpapp.New(
 		log,

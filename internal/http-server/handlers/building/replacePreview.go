@@ -1,6 +1,7 @@
-package handler_mux_v1
+package buildinghandler
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	buildService "rip/internal/service/build"
@@ -40,46 +41,57 @@ func AddBuildingPreview(buildingsService *buildService.BuildingService) func(
 
 			return
 		}
-
+		fmt.Println("1")
 		defer file.Close()
 
-		buff := make([]byte, 512)
-		_, err = file.Read(buff)
+		fileBytes, err := io.ReadAll(file)
 		if err != nil {
-			//errNew = err.Error()
-			//http_status = http.StatusInternalServerError
-
+			// Если не удается прочитать содержимое файла, возвращаем ошибку с соответствующим статусом и сообщением
 			http.Error(w, "", http.StatusBadRequest)
-
+			fmt.Println("err in fileBytes, err := io.ReadAll(file)")
 			return
 		}
+
+		//buff := make([]byte, 512)
+		//_, err = file.Read(buff)
+		//if err != nil {
+		//	//errNew = err.Error()
+		//	//http_status = http.StatusInternalServerError
+		//
+		//	http.Error(w, "", http.StatusBadRequest)
+		//
+		//	return
+		//}
+		fmt.Println("2")
 
 		// checking the content type
 		// so we don't allow files other than images
-		filetype := http.DetectContentType(buff)
-		if filetype != "image/jpeg" && filetype != "image/png" && filetype != "image/jpg" {
-			//errNew = "The provided file format is not allowed. Please upload a JPEG,JPG or PNG image"
-			//http_status = http.StatusBadRequest
+		//filetype := http.DetectContentType(buff)
+		//if filetype != "image/jpeg" && filetype != "image/png" && filetype != "image/jpg" {
+		//	//errNew = "The provided file format is not allowed. Please upload a JPEG,JPG or PNG image"
+		//	//http_status = http.StatusBadRequest
+		//
+		//	http.Error(w, "", http.StatusBadRequest)
+		//
+		//	return
+		//}
+		fmt.Println("3")
 
-			http.Error(w, "", http.StatusBadRequest)
-
-			return
-		}
-
-		_, err = file.Seek(0, io.SeekStart)
-		if err != nil {
-			//errNew = err.Error()
-			//http_status = http.StatusInternalServerError
-
-			http.Error(w, "", http.StatusInternalServerError)
-
-			return
-		}
+		//_, err = file.Seek(0, io.SeekStart)
+		//if err != nil {
+		//	//errNew = err.Error()
+		//	//http_status = http.StatusInternalServerError
+		//
+		//	http.Error(w, "", http.StatusInternalServerError)
+		//
+		//	return
+		//}
+		//fmt.Println("4")
 
 		if err := buildingsService.EditBuildingPreview(
 			r.Context(),
 			id,
-			file,
+			fileBytes,
 		); err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
 
