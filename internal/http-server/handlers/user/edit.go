@@ -1,11 +1,22 @@
 package userHandler
 
-import "net/http"
+import (
+	"encoding/json"
+	"net/http"
+	userService "rip/internal/service/user"
+)
 
-// Create a struct that models the structure of a user in the request body
-func EditUserHandler() func(http.ResponseWriter, *http.Request) {
+type EditUserRequest struct {
+	Password string `json:"password"`
+	Login    string `json:"login"`
+}
+
+func EditUserHandler(uService *userService.UserService) func(
+	http.ResponseWriter,
+	*http.Request,
+) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		_, err := r.Cookie("session_token")
+		token, err := r.Cookie("session_token")
 		if err != nil {
 			if err == http.ErrNoCookie {
 				// If the cookie is not set, return an unauthorized status
@@ -17,7 +28,19 @@ func EditUserHandler() func(http.ResponseWriter, *http.Request) {
 			return
 		}
 
-		//sessionToken := c.Value
+		var req EditUserRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+
+		if err := uService.Edit(
+			r.Context(),
+			token.Value,
+			req.Login,
+			req.Password,
+		); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
 
 	}
 }

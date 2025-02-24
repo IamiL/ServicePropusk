@@ -98,7 +98,7 @@ func (u *UserService) NewUser(
 	return nil
 }
 
-func (u *UserService) Deauthorization(ctx context.Context, token string) error {
+func (u *UserService) Logout(ctx context.Context, token string) error {
 	if err := u.tokenStorage.DeleteSession(token); err != nil {
 		return err
 	}

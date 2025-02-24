@@ -10,14 +10,6 @@ import (
 	"time"
 )
 
-const (
-	StatusDraft     = 0
-	StatusFormed    = 1
-	StatusReject    = 2
-	StatusCompleted = 3
-	StatusDeleted   = 4
-)
-
 type PassService struct {
 	passProvider        PassProvider
 	passSaver           PassSaver
@@ -145,20 +137,6 @@ func (p *PassService) Pass(
 	return pass, nil
 }
 
-func (p *PassService) DeleteBuildingFromPass(
-	ctx context.Context,
-	token string,
-	buildingId string,
-	passId string,
-) error {
-	err := p.passEditor.DeleteBuildingFromPass(ctx, buildingId, passId)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (p *PassService) AddBuildingToPass(
 	ctx context.Context,
 	token string,
@@ -174,7 +152,7 @@ func (p *PassService) AddBuildingToPass(
 			ctx,
 			passID,
 			userID,
-			StatusDraft,
+			consts.StatusDraft,
 			"",
 			time.Now(),
 		)
@@ -197,7 +175,7 @@ func (p *PassService) Delete(
 	if err := p.passEditor.EditPassStatusByUser(
 		ctx,
 		id,
-		StatusDeleted,
+		consts.StatusDeleted,
 		time.Now(),
 	); err != nil {
 		return err
@@ -274,7 +252,7 @@ func (p *PassService) ToForm(
 	if err := p.passEditor.EditPassStatusByUser(
 		ctx,
 		id,
-		StatusFormed,
+		consts.StatusFormed,
 		time.Now(),
 	); err != nil {
 		return err
@@ -293,7 +271,7 @@ func (p *PassService) RejectPass(
 	time := time.Now()
 
 	if err := p.passEditor.EditPassStatusByModerator(
-		ctx, id, StatusReject, time, moderatorId,
+		ctx, id, consts.StatusReject, time, moderatorId,
 	); err != nil {
 		return err
 	}
@@ -316,7 +294,7 @@ func (p *PassService) CompletePass(
 	moderatorId := ""
 
 	if err := p.passEditor.EditPassStatusByModerator(
-		ctx, id, StatusCompleted, time.Now(), moderatorId,
+		ctx, id, consts.StatusCompleted, time.Now(), moderatorId,
 	); err != nil {
 		return err
 	}

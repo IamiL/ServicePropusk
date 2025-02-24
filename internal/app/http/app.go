@@ -12,6 +12,7 @@ import (
 	userHandler "rip/internal/http-server/handlers/user"
 	buildService "rip/internal/service/build"
 	passService "rip/internal/service/pass"
+	passBuildingService "rip/internal/service/passBuilding"
 	userService "rip/internal/service/user"
 	"time"
 )
@@ -27,6 +28,7 @@ func New(
 	port int,
 	buildingService *buildService.BuildingService,
 	passService *passService.PassService,
+	passBuildingService *passBuildingService.PassBuildingService,
 	userService *userService.UserService,
 ) *App {
 	router := http.NewServeMux()
@@ -52,11 +54,11 @@ func New(
 		handler_mux_v1.DeleteBuildingHandler(buildingService),
 	)
 	router.HandleFunc(
-		"POST /buildings/{id}/topass",
+		"POST /buildings/{id}/draft",
 		handler_mux_v1.AddToPassHandler(log, passService),
 	)
 	router.HandleFunc(
-		"POST /buildings/{id}/preview/save",
+		"POST /buildings/{id}/image",
 		handler_mux_v1.AddBuildingPreview(buildingService),
 	)
 
@@ -67,7 +69,7 @@ func New(
 		passhandler.EditPassHandler(passService),
 	)
 	router.HandleFunc(
-		"PUT /passes/{id}/toForm",
+		"PUT /passes/{id}/submit",
 		passhandler.ToFormHandler(passService),
 	)
 	router.HandleFunc(
@@ -84,23 +86,28 @@ func New(
 	)
 
 	router.HandleFunc(
-		"DELETE /pass/deletebuilding/{id}",
-		passBuildingHandler.DeletePassBuilding(),
+		"DELETE /passes/{passId}/building/{buildingId}",
+		passBuildingHandler.DeletePassBuilding(passBuildingService),
+	)
+	router.HandleFunc(
+		"PUT /passes/{passId}/building/{buildingId}/main",
+		passBuildingHandler.PutPassBuilding(passBuildingService),
 	)
 
 	router.HandleFunc(
 		"POST /users",
 		userHandler.RegistrationHandler(userService),
 	)
-	router.HandleFunc("PUT /users", userHandler.EditUserHandler())
+	router.HandleFunc("PUT /users", userHandler.EditUserHandler(userService))
 	router.HandleFunc(
 		"POST /users/login",
 		userHandler.SigninHandler(userService),
 	)
 	router.HandleFunc(
 		"POST /users/logout",
-		userHandler.DeauthorizationHandler(userService),
+		userHandler.LogoutHandler(userService),
 	)
+
 	srv := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: router,

@@ -5,7 +5,7 @@ import (
 	userService "rip/internal/service/user"
 )
 
-func DeauthorizationHandler(uService *userService.UserService) func(
+func LogoutHandler(uService *userService.UserService) func(
 	http.ResponseWriter,
 	*http.Request,
 ) {
@@ -24,7 +24,7 @@ func DeauthorizationHandler(uService *userService.UserService) func(
 
 		sessionToken := c.Value
 
-		if err := uService.Deauthorization(
+		if err := uService.Logout(
 			r.Context(),
 			sessionToken,
 		); err != nil {

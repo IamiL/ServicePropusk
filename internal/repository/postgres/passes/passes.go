@@ -305,20 +305,6 @@ func (s *Storage) Passes(
 	return &services, nil
 }
 
-func (s *Storage) DeleteBuildingFromPass(
-	ctx context.Context,
-	buildingID string,
-	passId string,
-) error {
-	query := `DELETE from buildings_passes WHERE building = &1 AND pass = &2`
-
-	_, err := s.db.Exec(ctx, query, buildingID)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (s *Storage) EditPass(
 	ctx context.Context,
 	id string,
@@ -375,5 +361,35 @@ func (s *Storage) EditWasVisitedForPass(ctx context.Context, id string) error {
 		return err
 	}
 
+	return nil
+}
+
+func (s *Storage) EditPassBuildingComment(
+	ctx context.Context,
+	passID string,
+	buildingID string,
+	newComment string,
+) error {
+	query := `UPDATE buildings_passes SET comment = $1 WHERE pass = $2 AND building = $3;`
+
+	_, err := s.db.Exec(ctx, query, newComment, passID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Storage) DeletePassBuilding(
+	ctx context.Context,
+	passID string,
+	buildingID string,
+) error {
+	query := `DELETE from buildings_passes WHERE building = &1 AND pass = &2`
+
+	_, err := s.db.Exec(ctx, query, buildingID, passID)
+	if err != nil {
+		return err
+	}
 	return nil
 }
