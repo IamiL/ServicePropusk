@@ -30,6 +30,6 @@ CREATE TABLE IF NOT EXISTS buildings_passes (
 CREATE TABLE IF NOT EXISTS users (
                                      id uuid PRIMARY KEY,
                                      login TEXT,
-                                     pass_hash TEXT
+                                     pass_hash TEXT,
+                                     is_admin BOOLEAN NOT NULL
 )
-

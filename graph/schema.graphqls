@@ -1,0 +1,29 @@
+type Building {
+  id: ID!
+  name: String!
+  description: String!
+  imgUrl: String!
+}
+
+type Query {
+  building(id: ID!): Building
+  buildings(name: String): [Building!]!
+}
+
+type Mutation {
+  createBuilding(input: CreateBuildingInput!): Building!
+  updateBuilding(id: ID!, input: UpdateBuildingInput!): Building!
+  deleteBuilding(id: ID!): Boolean!
+}
+
+input CreateBuildingInput {
+  name: String!
+  description: String!
+  imgUrl: String!
+}
+
+input UpdateBuildingInput {
+  name: String
+  description: String
+  imgUrl: String
+} 

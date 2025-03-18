@@ -1,37 +1,34 @@
 package userHandler
 
 import (
+	"log/slog"
 	"net/http"
 	userService "rip/internal/service/user"
+	"time"
 )
 
-func LogoutHandler(uService *userService.UserService) func(
+// LogoutHandler godoc
+// @Summary Выйти из системы
+// @Description Очищает токен доступа пользователя и завершает сессию
+// @Tags users
+// @Produce json
+// @Success 200 "OK"
+// @Failure 500 {object} ErrorResponse
+// @Router /users/logout [post]
+// @Security ApiKeyAuth
+func LogoutHandler(
+	log *slog.Logger, uService *userService.UserService,
+) func(
 	http.ResponseWriter,
 	*http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		c, err := r.Cookie("session_token")
-		if err != nil {
-			if err == http.ErrNoCookie {
-				// If the cookie is not set, return an unauthorized status
-				w.WriteHeader(http.StatusUnauthorized)
-				return
-			}
-			// For any other type of error, return a bad request status
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-
-		sessionToken := c.Value
-
-		if err := uService.Logout(
-			r.Context(),
-			sessionToken,
-		); err != nil {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		w.WriteHeader(http.StatusOK)
+		// immediately clear the token cookie
+		http.SetCookie(
+			w, &http.Cookie{
+				Name:    "access_token",
+				Expires: time.Now(),
+			},
+		)
 	}
 }

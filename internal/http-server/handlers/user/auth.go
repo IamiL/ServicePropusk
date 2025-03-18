@@ -2,30 +2,45 @@ package userHandler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
-	userService "rip/internal/service/user"
+	authService "rip/internal/service/auth"
 )
 
+// Credentials представляет учетные данные пользователя
+// @Description Учетные данные для входа в систему
 type Credentials struct {
-	Password string `json:"password"`
-	Login    string `json:"login"`
+	Login    string `json:"login" example:"user@example.com" binding:"required,email"` // Email пользователя
+	Password string `json:"password" example:"password123" binding:"required"`         // Пароль пользователя
 }
 
-func SigninHandler(uService *userService.UserService) func(
+// SigninHandler godoc
+// @Summary Войти в систему
+// @Description Аутентифицирует пользователя и возвращает токен доступа
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param credentials body Credentials true "Учетные данные пользователя"
+// @Success 200 "OK"
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /users/login [post]
+func SigninHandler(
+	log *slog.Logger, authService *authService.AuthService, https bool,
+) func(
 	http.ResponseWriter,
 	*http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var creds Credentials
-		// Get the JSON body and decode into credentials
 		err := json.NewDecoder(r.Body).Decode(&creds)
 		if err != nil {
-			// If the structure of the body is wrong, return an HTTP error
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
 
-		sessionToken, expiresAt, err := uService.Auth(
+		sessionToken, err := authService.Auth(
 			r.Context(),
 			creds.Login,
 			creds.Password,
@@ -34,37 +49,30 @@ func SigninHandler(uService *userService.UserService) func(
 			w.WriteHeader(http.StatusUnauthorized)
 		}
 
-		http.SetCookie(
-			w, &http.Cookie{
-				Name:    "session_token",
-				Value:   sessionToken,
-				Expires: expiresAt,
-			},
-		)
-		// Get the expected password from our in memory map
-		//expectedPassword, ok := users[creds.Username]
-		//
-		//// If a password exists for the given user
-		//// AND, if it is the same as the password we received, the we can move ahead
-		//// if NOT, then we return an "Unauthorized" status
-		//if !ok || expectedPassword != creds.Password {
-		//	w.WriteHeader(http.StatusUnauthorized)
-		//	return
-		//}
+		cookie := &http.Cookie{}
 
-		// Create a new random session token
-		// we use the "github.com/google/uuid" library to generate UUIDs
-		//sessionToken := uuid.NewString()
-		//expiresAt := time.Now().Add(120 * time.Second)
-		//
-		//// Set the token in the session map, along with the session information
-		//sessions[sessionToken] = session{
-		//	username: creds.Username,
-		//	expiry:   expiresAt,
-		//}
+		if https {
+			cookie = &http.Cookie{
+				Name:     "access_token",
+				Value:    sessionToken,
+				MaxAge:   30000,
+				Path:     "/",
+				HttpOnly: true,
+				Secure:   true, // Оставьте false для локальной отладки без HTTPS
+				SameSite: http.SameSiteLaxMode,
+			}
+		} else {
+			cookie = &http.Cookie{
+				Name:     "access_token",
+				Value:    sessionToken,
+				MaxAge:   30000,
+				Path:     "/",
+				HttpOnly: true,
+				Secure:   false, // Оставьте false для локальной отладки без HTTPS
+				SameSite: http.SameSiteLaxMode,
+			}
+		}
 
-		// Finally, we set the client cookie for "session_token" as the session token we just generated
-		// we also set an expiry time of 120 seconds
-
+		http.SetCookie(w, cookie)
 	}
 }

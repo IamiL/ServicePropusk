@@ -1,0 +1,31 @@
+env: "local"
+app:
+  token_ttl: 300h
+  laboratory_work_number: 4
+  caching: false
+http_server:
+  address: "172.17.17.145:8000"
+  timeout: 4s
+  idle_timeout: 60s
+  tls: false
+  port: 8000
+postgresql:
+  host: localhost
+  port: 5430
+  database_name: service-propusk
+  username: iamil-admin
+  password: adminpass
+  max_connections: 5
+s3minio:
+  host: localhost
+  port: 9000
+  accessKey: minioadmin
+  secretKey: minioadmin
+  buildings_photos_bucket_name: services
+  static_files_bucket_name: static
+  qr_codes_bucket_name: qrcodes
+  builds_photos_local_path: data/s3Files/buildsMainPhotos/
+  static_files_local_path: data/s3Files/static/
+graphql:
+  port: "8001"
+  address: "172.17.17.145:8001"

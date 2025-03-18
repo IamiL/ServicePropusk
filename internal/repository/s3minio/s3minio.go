@@ -1,30 +1,49 @@
-package minioRepository
+package s3minio
 
 import (
 	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
 	"log"
 	"os"
 	model "rip/internal/domain"
-	postgresBuilds "rip/internal/repository/postgres/builds"
+	postgresBuilds "rip/internal/repository/postgres/buildings"
 	"strings"
+
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 )
 
-func Connect(
-	endpoint string,
-	accessKeyID string,
-	secretAccessKey string,
+type Config struct {
+	Host                      string `yaml:"host"`
+	Port                      string `yaml:"port"`
+	AccessKey                 string `yaml:"accessKey"`
+	SecretKey                 string `yaml:"secretKey"`
+	BuildingsPhotosBucketName string `yaml:"buildings_photos_bucket_name"`
+	StaticFilesBucketName     string `yaml:"static_files_bucket_name"`
+	QRCodesBucketName         string `yaml:"qr_codes_bucket_name"`
+	BuildsPhotosLocalPath     string `yaml:"builds_photos_local_path"`
+	StaticFilesLocalPath      string `yaml:"static_files_local_path"`
+}
+
+func (c *Config) Endpoint() string {
+	return fmt.Sprintf("%s:%s", c.Host, c.Port)
+}
+
+func NewConn(
+	config *Config,
 ) (*minio.Client, error) {
 	useSSL := false
 
 	// Initialize minio client object.
 	minioClient, err := minio.New(
-		endpoint, &minio.Options{
-			Creds:  credentials.NewStaticV4(accessKeyID, secretAccessKey, ""),
+		config.Endpoint(), &minio.Options{
+			Creds: credentials.NewStaticV4(
+				config.AccessKey,
+				config.SecretKey,
+				"",
+			),
 			Secure: useSSL,
 		},
 	)
@@ -50,6 +69,7 @@ type MinioRepository struct {
 	Session                   *minio.Client
 	BuildingsPhotosBucketName string
 	StaticFilesBucketName     string
+	QRCodesBucketName         string
 	PhotosLocalPath           string
 	StaticFilesPath           string
 	buildingsRepo             *postgresBuilds.Storage
@@ -59,6 +79,7 @@ func New(
 	sess *minio.Client,
 	buildsPhotosBucketName string,
 	staticFilesBucketName string,
+	qrCodesBucketName string,
 	photosLocalPath string,
 	staticFilesPath string,
 	buildingsRepo *postgresBuilds.Storage,
@@ -67,6 +88,7 @@ func New(
 		sess,
 		buildsPhotosBucketName,
 		staticFilesBucketName,
+		qrCodesBucketName,
 		photosLocalPath,
 		staticFilesPath,
 		buildingsRepo,
@@ -74,6 +96,7 @@ func New(
 }
 
 func (s *MinioRepository) ConfigureMinioStorage() error {
+	// Configure buildings photos bucket
 	found, err := s.Session.BucketExists(
 		context.Background(),
 		s.BuildingsPhotosBucketName,
@@ -83,9 +106,9 @@ func (s *MinioRepository) ConfigureMinioStorage() error {
 	}
 
 	if found {
-		log.Println("Bucket found.")
+		log.Println("Buildings photos bucket found.")
 	} else {
-		log.Println("Bucket not found.")
+		log.Println("Buildings photos bucket not found.")
 
 		log.Println("Creating minio bucket start")
 
@@ -119,9 +142,10 @@ func (s *MinioRepository) ConfigureMinioStorage() error {
 			return err
 		}
 
-		log.Println("Bucket " + s.BuildingsPhotosBucketName + "created")
+		log.Println("Bucket " + s.BuildingsPhotosBucketName + " created")
 	}
 
+	// Configure static files bucket
 	found, err = s.Session.BucketExists(
 		context.Background(),
 		s.StaticFilesBucketName,
@@ -131,9 +155,9 @@ func (s *MinioRepository) ConfigureMinioStorage() error {
 	}
 
 	if found {
-		log.Println("Bucket found.")
+		log.Println("Static files bucket found.")
 	} else {
-		log.Println("Bucket not found.")
+		log.Println("Static files bucket not found.")
 
 		log.Println("Creating minio bucket start")
 
@@ -167,7 +191,51 @@ func (s *MinioRepository) ConfigureMinioStorage() error {
 			return err
 		}
 
-		log.Println("Bucket " + s.StaticFilesBucketName + "created")
+		log.Println("Bucket " + s.StaticFilesBucketName + " created")
+	}
+
+	// Configure QR codes bucket
+	found, err = s.Session.BucketExists(
+		context.Background(),
+		s.QRCodesBucketName,
+	)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	if found {
+		log.Println("QR codes bucket found.")
+	} else {
+		log.Println("QR codes bucket not found.")
+
+		log.Println("Creating QR codes bucket")
+
+		opts := minio.MakeBucketOptions{
+			ObjectLocking: false,
+			Region:        "us-east-1",
+		}
+
+		err = s.Session.MakeBucket(
+			context.Background(),
+			s.QRCodesBucketName,
+			opts,
+		)
+		if err != nil {
+			log.Fatalln("makebucket error - ", err.Error())
+		}
+
+		policy := `{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:ListBucket","s3:ListBucketMultipartUploads","s3:GetBucketLocation"],"Resource":["arn:aws:s3:::qrcodes"]},{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:AbortMultipartUpload","s3:DeleteObject","s3:GetObject","s3:ListMultipartUploadParts","s3:PutObject"],"Resource":["arn:aws:s3:::qrcodes/*"]}]}`
+
+		err = s.Session.SetBucketPolicy(
+			context.Background(),
+			s.QRCodesBucketName,
+			policy,
+		)
+		if err != nil {
+			log.Fatalln("SetBucketPolicy error - ", err.Error())
+		}
+
+		log.Println("Bucket " + s.QRCodesBucketName + " created")
 	}
 
 	return nil
@@ -286,26 +354,25 @@ func (s *MinioRepository) SaveBuildingPreview(
 	id string,
 	object []byte,
 ) error {
-	fmt.Println("8")
-	//objectStat, err := object.Stat()
-	//if err != nil {
-	//	log.Fatalln(err)
-	//}
-
-	//var ff multipart.File
+	log.Printf("saving building preview: id=%s, size=%d bytes", id, len(object))
 
 	reader := bytes.NewReader(object)
-	if _, err := s.Session.PutObject(
-		ctx, s.BuildingsPhotosBucketName,
+	info, err := s.Session.PutObject(
+		ctx,
+		s.BuildingsPhotosBucketName,
 		id+".png",
 		reader,
 		int64(len(object)),
-		minio.PutObjectOptions{ContentType: "application/octet-stream"},
-	); err != nil {
-		fmt.Println("err: ", err.Error())
-		return err
+		minio.PutObjectOptions{
+			ContentType: "image/png",
+		},
+	)
+	if err != nil {
+		log.Printf("failed to save building preview: %v", err)
+		return fmt.Errorf("failed to save building preview: %w", err)
 	}
 
+	log.Printf("successfully saved building preview: id=%s, size=%d bytes", id, info.Size)
 	return nil
 }
 
@@ -354,7 +421,7 @@ func (s *MinioRepository) uploadPhoto(
 		"Successfully.",
 	)
 
-	if err := s.buildingsRepo.EditImgUrl(
+	if err := s.buildingsRepo.EditBuildingImgUrl(
 		context.Background(),
 		buildID,
 		"/"+s.BuildingsPhotosBucketName+"/"+buildID+".png",
@@ -416,5 +483,33 @@ func (s *MinioRepository) DeleteBuildingPreview(
 		return err
 	}
 
+	return nil
+}
+
+// SaveQRCode saves a QR code image to the QR codes bucket
+func (s *MinioRepository) SaveQRCode(
+	ctx context.Context,
+	id string,
+	qrCode []byte,
+) error {
+	log.Printf("saving QR code: id=%s, size=%d bytes", id, len(qrCode))
+
+	reader := bytes.NewReader(qrCode)
+	info, err := s.Session.PutObject(
+		ctx,
+		s.QRCodesBucketName,
+		id+".png",
+		reader,
+		int64(len(qrCode)),
+		minio.PutObjectOptions{
+			ContentType: "image/png",
+		},
+	)
+	if err != nil {
+		log.Printf("failed to save QR code: %v", err)
+		return fmt.Errorf("failed to save QR code: %w", err)
+	}
+
+	log.Printf("successfully saved QR code: id=%s, size=%d bytes", id, info.Size)
 	return nil
 }

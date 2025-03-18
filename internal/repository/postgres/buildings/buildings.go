@@ -1,18 +1,21 @@
-package postgresBuilds
+package postgresBuildings
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/jackc/pgx/v5"
 	model "rip/internal/domain"
+	repoErrors "rip/internal/pkg/errors/repo"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Storage struct {
-	db *pgx.Conn
+	db *pgxpool.Pool
 }
 
-func New(pool *pgx.Conn) (*Storage, error) {
+func New(pool *pgxpool.Pool) (*Storage, error) {
 	return &Storage{db: pool}, nil
 }
 
@@ -45,6 +48,8 @@ func (s *Storage) AllBuildings(ctx context.Context) (
 		services = append(services, c)
 	}
 
+	fmt.Println(op, ", нашли", len(services), " корпусов")
+
 	return services, nil
 }
 
@@ -54,6 +59,8 @@ func (s *Storage) FindBuildings(ctx context.Context, name string) (
 ) {
 	const op = "repository.services.postgres.Buildings"
 
+	fmt.Println("FindBuildings storage: name - ", name)
+
 	query := `SELECT id, name, description, img_url FROM buildings WHERE status = 'true' AND name LIKE '%` + name + `%' `
 
 	fmt.Println("query: ")
@@ -61,6 +68,10 @@ func (s *Storage) FindBuildings(ctx context.Context, name string) (
 
 	rows, err := s.db.Query(context.TODO(), query)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, repoErrors.ErrorNotFound
+		}
+
 		return nil, fmt.Errorf("%s: execute statement: %w", op, err)
 	}
 	defer rows.Close()
@@ -102,7 +113,7 @@ func (s *Storage) Building(ctx context.Context, id string) (
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return model.BuildingModel{}, errors.New("build not found")
+			return model.BuildingModel{}, repoErrors.ErrorNotFound
 		}
 		return model.BuildingModel{}, fmt.Errorf(
 			"%s: execute statement: %w",
@@ -113,12 +124,12 @@ func (s *Storage) Building(ctx context.Context, id string) (
 	return build, nil
 }
 
-func (s *Storage) EditImgUrl(
+func (s *Storage) EditBuildingImgUrl(
 	ctx context.Context,
 	id string,
 	url string,
 ) error {
-	const op = "repository.services.postgres.EditImgUrl"
+	const op = "repository.services.postgres.EditBuildingImgUrl"
 
 	query := `UPDATE buildings SET img_url = $1 WHERE id = $2;`
 
@@ -128,7 +139,6 @@ func (s *Storage) EditImgUrl(
 	}
 
 	return nil
-
 }
 
 func (s *Storage) EditBuildingInfo(
@@ -137,9 +147,9 @@ func (s *Storage) EditBuildingInfo(
 ) error {
 	const op = "repository.services.postgres.EditBuilding"
 
-	query := `UPDATE buildings SET name = $1, description = $2 WHERE id = $3;`
+	query := `UPDATE buildings SET name = $1, description = $2 WHERE id = $3 AND status = 'true';`
 
-	_, err := s.db.Exec(
+	result, err := s.db.Exec(
 		ctx,
 		query,
 		building.Name,
@@ -148,6 +158,10 @@ func (s *Storage) EditBuildingInfo(
 	)
 	if err != nil {
 		return fmt.Errorf("unable to insert row: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return repoErrors.ErrorNotFound
 	}
 
 	return nil
@@ -162,7 +176,7 @@ func (s *Storage) EditBuildingStatus(
 
 	query := `UPDATE buildings SET status = $1 WHERE id = $2;`
 
-	_, err := s.db.Exec(
+	result, err := s.db.Exec(
 		ctx,
 		query,
 		status,
@@ -170,6 +184,10 @@ func (s *Storage) EditBuildingStatus(
 	)
 	if err != nil {
 		return fmt.Errorf("unable to insert row: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return repoErrors.ErrorNotFound
 	}
 
 	return nil
