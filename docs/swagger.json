@@ -1,0 +1,1528 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API for managing buildings and passes.",
+        "title": "RIP API",
+        "termsOfService": "http://swagger.io/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://www.swagger.io/support",
+            "email": "support@swagger.io"
+        },
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8000",
+    "basePath": "/",
+    "paths": {
+        "/buildings": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает список всех зданий с возможностью фильтрации по названию",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "buildings"
+                ],
+                "summary": "Получить список зданий",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Название здания для фильтрации",
+                        "name": "buildName",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.BuildingsResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Создает новое здание в системе",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "buildings"
+                ],
+                "summary": "Создать новое здание",
+                "parameters": [
+                    {
+                        "description": "Данные нового здания",
+                        "name": "building",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.NewBuildingReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/buildings/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает информацию о конкретном здании",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "buildings"
+                ],
+                "summary": "Получить здание по ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID здания (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.BuildingResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Обновляет информацию о существующем здании",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "buildings"
+                ],
+                "summary": "Обновить здание",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID здания (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Обновленные данные здания",
+                        "name": "building",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.EditBuildingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Удаляет здание из системы",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "buildings"
+                ],
+                "summary": "Удалить здание",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID здания (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/buildings/{id}/draft": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Добавляет здание в текущий пропуск пользователя",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "buildings"
+                ],
+                "summary": "Добавить здание в пропуск",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID здания (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/buildings/{id}/image": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Загружает новое изображение превью для здания",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "buildings"
+                ],
+                "summary": "Заменить превью здания",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID здания (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Изображение для превью",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/buildinghandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/passes": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает список пропусков с возможностью фильтрации по статусу и датам",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "passes"
+                ],
+                "summary": "Получить список пропусков",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Статус пропуска для фильтрации",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Начальная дата для фильтрации (формат: DD.MM.YYYY)",
+                        "name": "begin_date",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Конечная дата для фильтрации (формат: DD.MM.YYYY)",
+                        "name": "end_date",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/passhandler.PassShortResp"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/passes/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Возвращает полную информацию о конкретном пропуске",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "passes"
+                ],
+                "summary": "Получить пропуск по ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID пропуска (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.PassResp"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Обновляет информацию о существующем пропуске",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "passes"
+                ],
+                "summary": "Обновить пропуск",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID пропуска (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Обновленные данные пропуска",
+                        "name": "pass",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.EditPassRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Удаляет пропуск из системы",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "passes"
+                ],
+                "summary": "Удалить пропуск",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID пропуска (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/passes/{id}/complete": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Меняет статус пропуска на \"completed\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "passes"
+                ],
+                "summary": "Завершить пропуск",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID пропуска (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/passes/{id}/reject": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Меняет статус пропуска на \"rejected\"",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "passes"
+                ],
+                "summary": "Отклонить пропуск",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID пропуска (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/passes/{id}/submit": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Меняет статус пропуска на \"submitted\" для рассмотрения модератором",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "passes"
+                ],
+                "summary": "Отправить пропуск на рассмотрение",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID пропуска (UUID)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/passhandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/passes/{passId}/building/{buildingId}": {
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Удаляет здание из пропуска",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pass-buildings"
+                ],
+                "summary": "Удалить здание из пропуска",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID пропуска (UUID)",
+                        "name": "passId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID здания (UUID)",
+                        "name": "buildingId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/passBuildingHandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/passBuildingHandler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/passBuildingHandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/passBuildingHandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/passes/{passId}/building/{buildingId}/main": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Обновляет информацию о связи пропуска со зданием (комментарий)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pass-buildings"
+                ],
+                "summary": "Обновить связь пропуска со зданием",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "ID пропуска (UUID)",
+                        "name": "passId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "ID здания (UUID)",
+                        "name": "buildingId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Обновленные данные связи",
+                        "name": "passBuilding",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/passBuildingHandler.EditPassBuildingRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/passBuildingHandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/passBuildingHandler.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/passBuildingHandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/passBuildingHandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Обновляет информацию о текущем пользователе",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Обновить данные пользователя",
+                "parameters": [
+                    {
+                        "description": "Обновленные данные пользователя",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.EditUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создает нового пользователя в системе",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Зарегистрировать нового пользователя",
+                "parameters": [
+                    {
+                        "description": "Данные нового пользователя",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.RegistrationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/login": {
+            "post": {
+                "description": "Аутентифицирует пользователя и возвращает токен доступа",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Войти в систему",
+                "parameters": [
+                    {
+                        "description": "Учетные данные пользователя",
+                        "name": "credentials",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.Credentials"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/users/logout": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Очищает токен доступа пользователя и завершает сессию",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Выйти из системы",
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/userHandler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "buildinghandler.BuildingResp": {
+            "description": "Ответ, содержащий информацию о конкретном здании",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "Описание здания",
+                    "type": "string",
+                    "example": "Многоэтажное офисное здание"
+                },
+                "id": {
+                    "description": "ID здания",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "imgUrl": {
+                    "description": "URL изображения здания",
+                    "type": "string",
+                    "example": "http://example.com/image.jpg"
+                },
+                "name": {
+                    "description": "Название здания",
+                    "type": "string",
+                    "example": "Офисное здание"
+                }
+            }
+        },
+        "buildinghandler.BuildingsResp": {
+            "description": "Ответ, содержащий список зданий и информацию о текущем пропуске",
+            "type": "object",
+            "properties": {
+                "buildings": {
+                    "description": "Список зданий",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/model.BuildingModel"
+                    }
+                },
+                "pass_id": {
+                    "description": "ID текущего пропуска",
+                    "type": "string"
+                },
+                "pass_items_count": {
+                    "description": "Количество зданий в пропуске",
+                    "type": "integer"
+                }
+            }
+        },
+        "buildinghandler.EditBuildingRequest": {
+            "description": "Запрос на обновление информации о здании",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "Описание здания",
+                    "type": "string",
+                    "example": "Многоэтажное офисное здание"
+                },
+                "name": {
+                    "description": "Название здания",
+                    "type": "string",
+                    "example": "Офисное здание"
+                }
+            }
+        },
+        "buildinghandler.ErrorResponse": {
+            "description": "Структура ответа при возникновении ошибки",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Текст ошибки",
+                    "type": "string",
+                    "example": "Описание ошибки"
+                }
+            }
+        },
+        "buildinghandler.NewBuildingReq": {
+            "description": "Запрос на создание нового здания",
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "description": "Описание здания",
+                    "type": "string",
+                    "example": "Многоэтажное офисное здание"
+                },
+                "name": {
+                    "description": "Название здания",
+                    "type": "string",
+                    "example": "Офисное здание"
+                }
+            }
+        },
+        "model.BuildingModel": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "imgUrl": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "passBuildingHandler.EditPassBuildingRequest": {
+            "description": "Запрос на обновление информации о связи пропуска со зданием",
+            "type": "object",
+            "properties": {
+                "comment": {
+                    "description": "Комментарий к зданию в пропуске",
+                    "type": "string",
+                    "example": "Комментарий к зданию в пропуске"
+                }
+            }
+        },
+        "passBuildingHandler.ErrorResponse": {
+            "description": "Структура ответа при возникновении ошибки",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Текст ошибки",
+                    "type": "string",
+                    "example": "Описание ошибки"
+                }
+            }
+        },
+        "passhandler.Building": {
+            "description": "Информация о здании в пропуске",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "Описание здания",
+                    "type": "string",
+                    "example": "Многоэтажное офисное здание"
+                },
+                "id": {
+                    "description": "ID здания",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "imgUrl": {
+                    "description": "URL изображения здания",
+                    "type": "string",
+                    "example": "http://example.com/image.jpg"
+                },
+                "name": {
+                    "description": "Название здания",
+                    "type": "string",
+                    "example": "Офисное здание"
+                }
+            }
+        },
+        "passhandler.EditPassRequest": {
+            "description": "Запрос на обновление информации о пропуске",
+            "type": "object",
+            "properties": {
+                "date_visit": {
+                    "description": "Дата посещения",
+                    "type": "string",
+                    "example": "2024-03-10T12:00:00Z"
+                },
+                "visitor": {
+                    "description": "Имя посетителя",
+                    "type": "string",
+                    "example": "Иван Иванов"
+                }
+            }
+        },
+        "passhandler.ErrorResponse": {
+            "description": "Структура ответа при возникновении ошибки",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Текст ошибки",
+                    "type": "string",
+                    "example": "Описание ошибки"
+                }
+            }
+        },
+        "passhandler.PassItem": {
+            "description": "Элемент пропуска (здание с комментарием)",
+            "type": "object",
+            "properties": {
+                "building": {
+                    "description": "Информация о здании",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/passhandler.Building"
+                        }
+                    ]
+                },
+                "comment": {
+                    "description": "Комментарий к зданию",
+                    "type": "string",
+                    "example": "Комментарий к зданию"
+                }
+            }
+        },
+        "passhandler.PassResp": {
+            "description": "Полная информация о пропуске",
+            "type": "object",
+            "properties": {
+                "dateVisit": {
+                    "description": "Дата посещения",
+                    "type": "string",
+                    "example": "2024-03-10T12:00:00Z"
+                },
+                "id": {
+                    "description": "ID пропуска",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "items": {
+                    "description": "Список зданий в пропуске",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/passhandler.PassItem"
+                    }
+                },
+                "visitorName": {
+                    "description": "Имя посетителя",
+                    "type": "string",
+                    "example": "Иван Иванов"
+                }
+            }
+        },
+        "passhandler.PassShortResp": {
+            "description": "Краткая информация о пропуске для списка",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "ID пропуска",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "moderator": {
+                    "description": "Информация о модераторе (если есть)",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/passhandler.User"
+                        }
+                    ]
+                },
+                "status": {
+                    "description": "Статус пропуска",
+                    "type": "integer",
+                    "example": 1
+                },
+                "user": {
+                    "description": "Информация о создателе пропуска",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/passhandler.User"
+                        }
+                    ]
+                }
+            }
+        },
+        "passhandler.User": {
+            "description": "Информация о пользователе",
+            "type": "object",
+            "properties": {
+                "login": {
+                    "description": "Логин пользователя",
+                    "type": "string",
+                    "example": "user@example.com"
+                }
+            }
+        },
+        "userHandler.Credentials": {
+            "description": "Учетные данные для входа в систему",
+            "type": "object",
+            "required": [
+                "login",
+                "password"
+            ],
+            "properties": {
+                "login": {
+                    "description": "Email пользователя",
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "description": "Пароль пользователя",
+                    "type": "string",
+                    "example": "password123"
+                }
+            }
+        },
+        "userHandler.EditUserRequest": {
+            "description": "Запрос на обновление данных пользователя",
+            "type": "object",
+            "properties": {
+                "login": {
+                    "description": "Новый email пользователя",
+                    "type": "string",
+                    "example": "newuser@example.com"
+                },
+                "password": {
+                    "description": "Новый пароль пользователя",
+                    "type": "string",
+                    "example": "newpassword123"
+                }
+            }
+        },
+        "userHandler.ErrorResponse": {
+            "description": "Структура ответа при возникновении ошибки",
+            "type": "object",
+            "properties": {
+                "message": {
+                    "description": "Текст ошибки",
+                    "type": "string",
+                    "example": "Описание ошибки"
+                }
+            }
+        },
+        "userHandler.RegistrationRequest": {
+            "description": "Запрос на регистрацию нового пользователя",
+            "type": "object",
+            "required": [
+                "login",
+                "password"
+            ],
+            "properties": {
+                "login": {
+                    "description": "Email пользователя",
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "password": {
+                    "description": "Пароль пользователя (минимум 6 символов)",
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "description": "Enter your JWT token value",
+            "type": "apiKey",
+            "name": "X-Access-Token",
+            "in": "header"
+        }
+    }
+}

@@ -1,0 +1,1011 @@
+basePath: /
+definitions:
+  buildinghandler.BuildingResp:
+    description: Ответ, содержащий информацию о конкретном здании
+    properties:
+      description:
+        description: Описание здания
+        example: Многоэтажное офисное здание
+        type: string
+      id:
+        description: ID здания
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      imgUrl:
+        description: URL изображения здания
+        example: http://example.com/image.jpg
+        type: string
+      name:
+        description: Название здания
+        example: Офисное здание
+        type: string
+    type: object
+  buildinghandler.BuildingsResp:
+    description: Ответ, содержащий список зданий и информацию о текущем пропуске
+    properties:
+      buildings:
+        description: Список зданий
+        items:
+          $ref: '#/definitions/model.BuildingModel'
+        type: array
+      pass_id:
+        description: ID текущего пропуска
+        type: string
+      pass_items_count:
+        description: Количество зданий в пропуске
+        type: integer
+    type: object
+  buildinghandler.EditBuildingRequest:
+    description: Запрос на обновление информации о здании
+    properties:
+      description:
+        description: Описание здания
+        example: Многоэтажное офисное здание
+        type: string
+      name:
+        description: Название здания
+        example: Офисное здание
+        type: string
+    type: object
+  buildinghandler.ErrorResponse:
+    description: Структура ответа при возникновении ошибки
+    properties:
+      message:
+        description: Текст ошибки
+        example: Описание ошибки
+        type: string
+    type: object
+  buildinghandler.NewBuildingReq:
+    description: Запрос на создание нового здания
+    properties:
+      description:
+        description: Описание здания
+        example: Многоэтажное офисное здание
+        type: string
+      name:
+        description: Название здания
+        example: Офисное здание
+        type: string
+    required:
+    - name
+    type: object
+  model.BuildingModel:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      imgUrl:
+        type: string
+      name:
+        type: string
+    type: object
+  passBuildingHandler.EditPassBuildingRequest:
+    description: Запрос на обновление информации о связи пропуска со зданием
+    properties:
+      comment:
+        description: Комментарий к зданию в пропуске
+        example: Комментарий к зданию в пропуске
+        type: string
+    type: object
+  passBuildingHandler.ErrorResponse:
+    description: Структура ответа при возникновении ошибки
+    properties:
+      message:
+        description: Текст ошибки
+        example: Описание ошибки
+        type: string
+    type: object
+  passhandler.Building:
+    description: Информация о здании в пропуске
+    properties:
+      description:
+        description: Описание здания
+        example: Многоэтажное офисное здание
+        type: string
+      id:
+        description: ID здания
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      imgUrl:
+        description: URL изображения здания
+        example: http://example.com/image.jpg
+        type: string
+      name:
+        description: Название здания
+        example: Офисное здание
+        type: string
+    type: object
+  passhandler.EditPassRequest:
+    description: Запрос на обновление информации о пропуске
+    properties:
+      date_visit:
+        description: Дата посещения
+        example: "2024-03-10T12:00:00Z"
+        type: string
+      visitor:
+        description: Имя посетителя
+        example: Иван Иванов
+        type: string
+    type: object
+  passhandler.ErrorResponse:
+    description: Структура ответа при возникновении ошибки
+    properties:
+      message:
+        description: Текст ошибки
+        example: Описание ошибки
+        type: string
+    type: object
+  passhandler.PassItem:
+    description: Элемент пропуска (здание с комментарием)
+    properties:
+      building:
+        allOf:
+        - $ref: '#/definitions/passhandler.Building'
+        description: Информация о здании
+      comment:
+        description: Комментарий к зданию
+        example: Комментарий к зданию
+        type: string
+    type: object
+  passhandler.PassResp:
+    description: Полная информация о пропуске
+    properties:
+      dateVisit:
+        description: Дата посещения
+        example: "2024-03-10T12:00:00Z"
+        type: string
+      id:
+        description: ID пропуска
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      items:
+        description: Список зданий в пропуске
+        items:
+          $ref: '#/definitions/passhandler.PassItem'
+        type: array
+      visitorName:
+        description: Имя посетителя
+        example: Иван Иванов
+        type: string
+    type: object
+  passhandler.PassShortResp:
+    description: Краткая информация о пропуске для списка
+    properties:
+      id:
+        description: ID пропуска
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      moderator:
+        allOf:
+        - $ref: '#/definitions/passhandler.User'
+        description: Информация о модераторе (если есть)
+      status:
+        description: Статус пропуска
+        example: 1
+        type: integer
+      user:
+        allOf:
+        - $ref: '#/definitions/passhandler.User'
+        description: Информация о создателе пропуска
+    type: object
+  passhandler.User:
+    description: Информация о пользователе
+    properties:
+      login:
+        description: Логин пользователя
+        example: user@example.com
+        type: string
+    type: object
+  userHandler.Credentials:
+    description: Учетные данные для входа в систему
+    properties:
+      login:
+        description: Email пользователя
+        example: user@example.com
+        type: string
+      password:
+        description: Пароль пользователя
+        example: password123
+        type: string
+    required:
+    - login
+    - password
+    type: object
+  userHandler.EditUserRequest:
+    description: Запрос на обновление данных пользователя
+    properties:
+      login:
+        description: Новый email пользователя
+        example: newuser@example.com
+        type: string
+      password:
+        description: Новый пароль пользователя
+        example: newpassword123
+        type: string
+    type: object
+  userHandler.ErrorResponse:
+    description: Структура ответа при возникновении ошибки
+    properties:
+      message:
+        description: Текст ошибки
+        example: Описание ошибки
+        type: string
+    type: object
+  userHandler.RegistrationRequest:
+    description: Запрос на регистрацию нового пользователя
+    properties:
+      login:
+        description: Email пользователя
+        example: user@example.com
+        type: string
+      password:
+        description: Пароль пользователя (минимум 6 символов)
+        example: password123
+        minLength: 6
+        type: string
+    required:
+    - login
+    - password
+    type: object
+host: localhost:8000
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: API for managing buildings and passes.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: RIP API
+  version: "1.0"
+paths:
+  /buildings:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список всех зданий с возможностью фильтрации по названию
+      parameters:
+      - description: Название здания для фильтрации
+        in: query
+        name: buildName
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/buildinghandler.BuildingsResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить список зданий
+      tags:
+      - buildings
+    post:
+      consumes:
+      - application/json
+      description: Создает новое здание в системе
+      parameters:
+      - description: Данные нового здания
+        in: body
+        name: building
+        required: true
+        schema:
+          $ref: '#/definitions/buildinghandler.NewBuildingReq'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Создать новое здание
+      tags:
+      - buildings
+  /buildings/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет здание из системы
+      parameters:
+      - description: ID здания (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить здание
+      tags:
+      - buildings
+    get:
+      consumes:
+      - application/json
+      description: Возвращает информацию о конкретном здании
+      parameters:
+      - description: ID здания (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/buildinghandler.BuildingResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить здание по ID
+      tags:
+      - buildings
+    put:
+      consumes:
+      - application/json
+      description: Обновляет информацию о существующем здании
+      parameters:
+      - description: ID здания (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Обновленные данные здания
+        in: body
+        name: building
+        required: true
+        schema:
+          $ref: '#/definitions/buildinghandler.EditBuildingRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить здание
+      tags:
+      - buildings
+  /buildings/{id}/draft:
+    post:
+      consumes:
+      - application/json
+      description: Добавляет здание в текущий пропуск пользователя
+      parameters:
+      - description: ID здания (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Добавить здание в пропуск
+      tags:
+      - buildings
+  /buildings/{id}/image:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Загружает новое изображение превью для здания
+      parameters:
+      - description: ID здания (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Изображение для превью
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/buildinghandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Заменить превью здания
+      tags:
+      - buildings
+  /passes:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список пропусков с возможностью фильтрации по статусу
+        и датам
+      parameters:
+      - description: Статус пропуска для фильтрации
+        in: query
+        name: status
+        type: integer
+      - description: 'Начальная дата для фильтрации (формат: DD.MM.YYYY)'
+        in: query
+        name: begin_date
+        type: string
+      - description: 'Конечная дата для фильтрации (формат: DD.MM.YYYY)'
+        in: query
+        name: end_date
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/passhandler.PassShortResp'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить список пропусков
+      tags:
+      - passes
+  /passes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет пропуск из системы
+      parameters:
+      - description: ID пропуска (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить пропуск
+      tags:
+      - passes
+    get:
+      consumes:
+      - application/json
+      description: Возвращает полную информацию о конкретном пропуске
+      parameters:
+      - description: ID пропуска (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/passhandler.PassResp'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Получить пропуск по ID
+      tags:
+      - passes
+    put:
+      consumes:
+      - application/json
+      description: Обновляет информацию о существующем пропуске
+      parameters:
+      - description: ID пропуска (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Обновленные данные пропуска
+        in: body
+        name: pass
+        required: true
+        schema:
+          $ref: '#/definitions/passhandler.EditPassRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить пропуск
+      tags:
+      - passes
+  /passes/{id}/complete:
+    put:
+      consumes:
+      - application/json
+      description: Меняет статус пропуска на "completed"
+      parameters:
+      - description: ID пропуска (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Завершить пропуск
+      tags:
+      - passes
+  /passes/{id}/reject:
+    put:
+      consumes:
+      - application/json
+      description: Меняет статус пропуска на "rejected"
+      parameters:
+      - description: ID пропуска (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Отклонить пропуск
+      tags:
+      - passes
+  /passes/{id}/submit:
+    put:
+      consumes:
+      - application/json
+      description: Меняет статус пропуска на "submitted" для рассмотрения модератором
+      parameters:
+      - description: ID пропуска (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/passhandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Отправить пропуск на рассмотрение
+      tags:
+      - passes
+  /passes/{passId}/building/{buildingId}:
+    delete:
+      consumes:
+      - application/json
+      description: Удаляет здание из пропуска
+      parameters:
+      - description: ID пропуска (UUID)
+        in: path
+        name: passId
+        required: true
+        type: string
+      - description: ID здания (UUID)
+        in: path
+        name: buildingId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/passBuildingHandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/passBuildingHandler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/passBuildingHandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/passBuildingHandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Удалить здание из пропуска
+      tags:
+      - pass-buildings
+  /passes/{passId}/building/{buildingId}/main:
+    put:
+      consumes:
+      - application/json
+      description: Обновляет информацию о связи пропуска со зданием (комментарий)
+      parameters:
+      - description: ID пропуска (UUID)
+        in: path
+        name: passId
+        required: true
+        type: string
+      - description: ID здания (UUID)
+        in: path
+        name: buildingId
+        required: true
+        type: string
+      - description: Обновленные данные связи
+        in: body
+        name: passBuilding
+        required: true
+        schema:
+          $ref: '#/definitions/passBuildingHandler.EditPassBuildingRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/passBuildingHandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/passBuildingHandler.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/passBuildingHandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/passBuildingHandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить связь пропуска со зданием
+      tags:
+      - pass-buildings
+  /users:
+    post:
+      consumes:
+      - application/json
+      description: Создает нового пользователя в системе
+      parameters:
+      - description: Данные нового пользователя
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/userHandler.RegistrationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/userHandler.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/userHandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/userHandler.ErrorResponse'
+      summary: Зарегистрировать нового пользователя
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Обновляет информацию о текущем пользователе
+      parameters:
+      - description: Обновленные данные пользователя
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/userHandler.EditUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/userHandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/userHandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/userHandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Обновить данные пользователя
+      tags:
+      - users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Аутентифицирует пользователя и возвращает токен доступа
+      parameters:
+      - description: Учетные данные пользователя
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/userHandler.Credentials'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/userHandler.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/userHandler.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/userHandler.ErrorResponse'
+      summary: Войти в систему
+      tags:
+      - users
+  /users/logout:
+    post:
+      description: Очищает токен доступа пользователя и завершает сессию
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/userHandler.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Выйти из системы
+      tags:
+      - users
+securityDefinitions:
+  ApiKeyAuth:
+    description: Enter your JWT token value
+    in: header
+    name: X-Access-Token
+    type: apiKey
+swagger: "2.0"
