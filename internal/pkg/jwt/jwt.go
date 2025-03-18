@@ -54,12 +54,6 @@ func VerifyToken(tokenString string, secret []byte) (string, bool, error) {
 	if !token.Valid {
 		return "", false, fmt.Errorf("invalid token")
 	}
-	fmt.Println(
-		"Parse token results: uid - ",
-		claims["uid"].(string),
-		", isAdmin - ",
-		claims["is_admin"].(bool),
-	)
 
 	// Return the verified token
 	return claims["uid"].(string), claims["is_admin"].(bool), nil

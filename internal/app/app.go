@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"log/slog"
 	"net"
 	graphqlapp "rip/internal/app/graphql"
@@ -58,13 +57,11 @@ func New(
 
 	buildRepository, err := postgresBuilds.New(postgresPool)
 	if err != nil {
-		fmt.Println(err.Error())
 		panic(err.Error())
 	}
 
 	passRepository, err := postgresPasses.New(postgresPool)
 	if err != nil {
-		fmt.Println(err.Error())
 		panic(err.Error())
 	}
 

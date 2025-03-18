@@ -2,7 +2,6 @@ package authService
 
 import (
 	"context"
-	"fmt"
 	"golang.org/x/crypto/bcrypt"
 	"log/slog"
 	bizErrors "rip/internal/pkg/errors/biz"
@@ -55,9 +54,6 @@ func (a *AuthService) Auth(
 		return "", err
 	}
 
-	a.log.Info("создаём токен, исАдмин - ")
-	fmt.Println(isAdmin)
-
 	token, err := jwtToken.New(
 		uid,
 		isAdmin,
@@ -67,6 +63,12 @@ func (a *AuthService) Auth(
 	if err != nil {
 		a.log.Error("failed to generate token", sl.Err(err))
 		return "", err
+	}
+
+	if isAdmin {
+		a.log.Info("был создан токен администратора")
+	} else {
+		a.log.Info("был создан токен пользователя")
 	}
 
 	return token, nil

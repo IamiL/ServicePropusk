@@ -14,7 +14,6 @@ import (
 func main() {
 	router := gin.Default()
 
-	// Configure CORS
 	router.Use(
 		cors.New(
 			cors.Config{
@@ -44,7 +43,6 @@ func main() {
 		),
 	)
 
-	// Add Swagger UI with custom configuration
 	router.GET(
 		"/swagger/*any", ginSwagger.WrapHandler(
 			swaggerFiles.Handler,
@@ -54,11 +52,8 @@ func main() {
 		),
 	)
 
-	// Serve static files from docs directory
 	router.Static("/docs", "./docs")
 
-	// Start server
-	//fmt.Println("Swagger UI is available at http://localhost:8081/swagger/index.html")
 	if err := router.Run(":8081"); err != nil {
 		log.Fatal(err)
 	}

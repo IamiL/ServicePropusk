@@ -189,8 +189,6 @@ func (p *PassService) Pass(
 		return nil, bizErrors.ErrorNoPermission
 	}
 
-	fmt.Println("getPass service, builds in pass: ", len(pass.Items))
-
 	return pass, nil
 }
 
@@ -297,7 +295,7 @@ func (p *PassService) GetPassItemsCount(
 ) {
 	uid, _, err := p.authService.Claims(accessToken)
 	if err != nil {
-		fmt.Println("Error getting token claims: ", err.Error())
+		p.log.Info("Error getting token claims: ", sl.Err(err))
 	}
 
 	return p.passProvider.ItemsCount(ctx, uid)

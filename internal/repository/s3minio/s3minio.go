@@ -51,15 +51,9 @@ func NewConn(
 		log.Fatalln(err)
 	}
 
-	buckets, err := minioClient.ListBuckets(context.Background())
+	_, err = minioClient.ListBuckets(context.Background())
 	if err != nil {
-		log.Fatalln(err)
-	}
-
-	log.Println("connection to minio successful")
-
-	for i, bucket := range buckets {
-		log.Println("bucket № ", i, " - ", bucket)
+		return nil, err
 	}
 
 	return minioClient, nil
@@ -272,7 +266,7 @@ func (s *MinioRepository) SyncStaticFiles() error {
 	//}
 	//defer func() {
 	//	if err := object.Close(); err != nil {
-	//		fmt.Println(err)
+	//		return err
 	//	}
 	//}()
 	//
@@ -372,7 +366,11 @@ func (s *MinioRepository) SaveBuildingPreview(
 		return fmt.Errorf("failed to save building preview: %w", err)
 	}
 
-	log.Printf("successfully saved building preview: id=%s, size=%d bytes", id, info.Size)
+	log.Printf(
+		"successfully saved building preview: id=%s, size=%d bytes",
+		id,
+		info.Size,
+	)
 	return nil
 }
 
@@ -470,8 +468,6 @@ func (s *MinioRepository) DeleteBuildingPreview(
 	opts := minio.RemoveObjectOptions{
 		GovernanceBypass: true,
 	}
-
-	fmt.Println("6")
 	err := s.Session.RemoveObject(
 		context.Background(),
 		s.BuildingsPhotosBucketName,
@@ -510,6 +506,10 @@ func (s *MinioRepository) SaveQRCode(
 		return fmt.Errorf("failed to save QR code: %w", err)
 	}
 
-	log.Printf("successfully saved QR code: id=%s, size=%d bytes", id, info.Size)
+	log.Printf(
+		"successfully saved QR code: id=%s, size=%d bytes",
+		id,
+		info.Size,
+	)
 	return nil
 }

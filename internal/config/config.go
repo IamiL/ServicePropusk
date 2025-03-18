@@ -2,7 +2,6 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"rip/internal/app"
 	"rip/internal/app/graphql"
@@ -42,8 +41,6 @@ func MustLoadPath(configPath string) *Config {
 	if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
 		panic("cannot read config: " + err.Error())
 	}
-
-	fmt.Println(cfg.HTTP.Port)
 
 	return &cfg
 }

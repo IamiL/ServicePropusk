@@ -38,8 +38,7 @@ func main() {
 
 	buildRepository, err := postgresBuilds.New(postgresPool)
 	if err != nil {
-		fmt.Println(err.Error())
-
+		log.Error("Error creating postgres build repository", sl.Err(err))
 	}
 
 	s3Session, err := minioRepository.NewConn(

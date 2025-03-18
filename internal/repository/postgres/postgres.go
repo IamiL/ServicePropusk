@@ -46,7 +46,5 @@ func NewConnPool(config *Config) (*pgxpool.Pool, error) {
 		return nil, errors.New(fmt.Sprintf("Ошибка ping к postgres: %w", err))
 	}
 
-	fmt.Println("Пул соединений успешно настроен")
-
 	return pool, err
 }

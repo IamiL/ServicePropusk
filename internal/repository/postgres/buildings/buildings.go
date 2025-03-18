@@ -48,8 +48,6 @@ func (s *Storage) AllBuildings(ctx context.Context) (
 		services = append(services, c)
 	}
 
-	fmt.Println(op, ", нашли", len(services), " корпусов")
-
 	return services, nil
 }
 
@@ -59,12 +57,7 @@ func (s *Storage) FindBuildings(ctx context.Context, name string) (
 ) {
 	const op = "repository.services.postgres.Buildings"
 
-	fmt.Println("FindBuildings storage: name - ", name)
-
 	query := `SELECT id, name, description, img_url FROM buildings WHERE status = 'true' AND name LIKE '%` + name + `%' `
-
-	fmt.Println("query: ")
-	fmt.Println(query)
 
 	rows, err := s.db.Query(context.TODO(), query)
 	if err != nil {

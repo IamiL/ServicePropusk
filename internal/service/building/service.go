@@ -94,8 +94,6 @@ func New(
 func (s *BuildingService) GetAllBuildings(
 	ctx context.Context,
 ) (*[]model.BuildingModel, error) {
-	fmt.Println("GetAllBuildings service:")
-
 	buildings, err := s.bProvider.AllBuildings(ctx)
 	if err != nil {
 		s.log.Error("error get all buildings: ", sl.Err(err))
@@ -109,8 +107,6 @@ func (s *BuildingService) FindBuildings(
 	ctx context.Context,
 	buildingName string,
 ) (*[]model.BuildingModel, error) {
-	fmt.Println("findBuildings service, buildingName - ", buildingName)
-
 	if buildingName == "" {
 		return s.GetAllBuildings(ctx)
 	}
@@ -153,7 +149,7 @@ func (s *BuildingService) AddBuilding(
 ) error {
 	_, isAdmin, err := s.authService.Claims(accessToken)
 	if err != nil {
-		fmt.Println("Error getting token claims: ", err.Error())
+		return bizErrors.ErrorAuthToken
 	}
 
 	if !isAdmin {
@@ -185,7 +181,7 @@ func (s *BuildingService) EditBuilding(
 ) error {
 	_, isAdmin, err := s.authService.Claims(accessToken)
 	if err != nil {
-		fmt.Println("Error getting token claims: ", err.Error())
+		return bizErrors.ErrorAuthToken
 	}
 
 	if !isAdmin {

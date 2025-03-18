@@ -2,7 +2,6 @@ package httpapp
 
 import (
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -144,14 +143,12 @@ func New(
 
 	// Применяем middleware в правильном порядке
 	handler := tokenToHeaderMiddleware(router)
-	handler = corsMiddleware(handler)
+	handler = corsMiddleware(log, handler)
 
 	srv := &http.Server{
 		Addr:    config.Addr,
 		Handler: handler,
 	}
-
-	fmt.Println(config.Port)
 
 	return &App{log: log, httpServer: srv, port: config.Port, Tls: config.Tls}
 }
@@ -174,12 +171,10 @@ func (a *App) Run() error {
 			"server.key",
 		); err != nil {
 			a.log.Error("failed to start https server", sl.Err(err))
-			fmt.Println("err: ", err.Error())
 		}
 	} else {
 		if err := a.httpServer.ListenAndServe(); err != nil {
 			a.log.Error("failed to start http server", sl.Err(err))
-			fmt.Println("err: ", err.Error())
 		}
 	}
 
@@ -202,10 +197,10 @@ func (a *App) Stop() {
 	a.log.Info("Gracefully stopped")
 }
 
-func corsMiddleware(next http.Handler) http.Handler {
+func corsMiddleware(log *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			fmt.Println("origin: ", r.Header.Get("origin"))
+			log.Info("origin: ", r.Header.Get("origin"))
 
 			// Определяем Origin запроса
 			origin := r.Header.Get("Origin")
@@ -257,60 +252,29 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 func tokenToHeaderMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Проверяем наличие X-Access-Token заголовка
-		token := r.Header.Get("X-Access-Token")
-		if token != "" {
-			// Создаем cookie с токеном
-			cookie := &http.Cookie{
-				Name:     "access_token",
-				Value:    token,
-				MaxAge:   30000,
-				Path:     "/",
-				HttpOnly: true,
-				Secure:   false, // Для локальной разработки
-				SameSite: http.SameSiteLaxMode,
+	return http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			// Проверяем наличие X-Access-Token заголовка
+			token := r.Header.Get("X-Access-Token")
+			if token != "" {
+				// Создаем cookie с токеном
+				cookie := &http.Cookie{
+					Name:     "access_token",
+					Value:    token,
+					MaxAge:   30000,
+					Path:     "/",
+					HttpOnly: true,
+					Secure:   false, // Для локальной разработки
+					SameSite: http.SameSiteLaxMode,
+				}
+
+				// Добавляем cookie в текущий запрос
+				r.AddCookie(cookie)
+
+				// Также устанавливаем cookie в ответ для будущих запросов
+				http.SetCookie(w, cookie)
 			}
-
-			// Добавляем cookie в текущий запрос
-			r.AddCookie(cookie)
-
-			// Также устанавливаем cookie в ответ для будущих запросов
-			http.SetCookie(w, cookie)
-		}
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		},
+	)
 }
-
-//func authenticateMiddleware(
-//	next http.Handler,
-//	authService authService.AuthService,
-//) http.Handler {
-//	return http.HandlerFunc(
-//		func(w http.ResponseWriter, r *http.Request) {
-//			tokenString, err := r.Cookie("token")
-//			if err != nil {
-//				fmt.Println("Token missing in cookie")
-//				http.Redirect(w, r, "/auth", http.StatusUnauthorized)
-//				return
-//			}
-//
-//			// Verify the token
-//			token, err := authService.VerifyToken(tokenString.Value)
-//			if err != nil {
-//				fmt.Printf("Token verification failed: %v\\n", err)
-//				http.Redirect(w, r, "/auth", http.StatusUnauthorized)
-//				return
-//			}
-//
-//			// Print information about the verified token
-//			fmt.Printf(
-//				"Token verified successfully. Claims: %+v\\n",
-//				token.Claims,
-//			)
-//
-//			// Continue with the next middleware or route handler
-//			next.ServeHTTP(w, r)
-//		},
-//	)
-//}

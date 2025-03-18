@@ -3,11 +3,11 @@ package userHandler
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
 	bizErrors "rip/internal/pkg/errors/biz"
 	http_api "rip/internal/pkg/http-api"
+	"rip/internal/pkg/logger/sl"
 	userService "rip/internal/service/user"
 )
 
@@ -37,13 +37,11 @@ func RegistrationHandler(
 	*http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("registration handler")
 		var req RegistrationRequest
 
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
 			http_api.HandleError(w, http.StatusBadRequest, err.Error())
-			fmt.Println("err: ", err.Error())
 			return
 		}
 
@@ -52,7 +50,6 @@ func RegistrationHandler(
 			req.Login,
 			req.Password,
 		); err != nil {
-			fmt.Println("err: ", err.Error())
 			if errors.Is(err, bizErrors.ErrorShortPassword) || errors.Is(
 				err,
 				bizErrors.ErrorUserAlreadyExists,
@@ -61,6 +58,7 @@ func RegistrationHandler(
 				return
 			}
 
+			log.Error("RegistrationHandler error", sl.Err(err))
 			http_api.HandleError(w, http.StatusInternalServerError, err.Error())
 		}
 	}

@@ -3,7 +3,6 @@ package userService
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"log/slog"
@@ -90,8 +89,7 @@ func (u *UserService) NewUser(
 		passHash,
 		false,
 	); err != nil {
-		fmt.Println("err: ", err.Error())
-		return errors.New("internal server error")
+		return bizErrors.ErrorInternalServer
 	}
 
 	return nil

@@ -68,7 +68,6 @@ func (s *Storage) Pass(ctx context.Context, id string) (
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			fmt.Println("error errnorows")
 			return &model.PassModel{}, repoErrors.ErrorNotFound
 		}
 		return &model.PassModel{}, fmt.Errorf(
@@ -95,9 +94,6 @@ func (s *Storage) Pass(ctx context.Context, id string) (
 	pass.Items = make(model.PassItems, 0, 5)
 
 	for rows.Next() {
-
-		fmt.Println("getPass repo 4 start")
-
 		var c pgtype.Text
 
 		item := model.PassItem{Building: &model.BuildingModel{}}
@@ -117,13 +113,9 @@ func (s *Storage) Pass(ctx context.Context, id string) (
 			)
 		}
 
-		fmt.Println("getPass repo 4 seredina")
-
 		item.Comment = c.String
 
 		pass.Items = append(pass.Items, &item)
-
-		fmt.Println("getPass repo 4 end")
 	}
 
 	return &pass, nil
@@ -144,10 +136,9 @@ func (s *Storage) ID(ctx context.Context, uid string) (string, error) {
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			fmt.Println("error errnorows")
 			return "", nil
 		}
-		fmt.Println("error other")
+
 		return "", fmt.Errorf(
 			"%s: execute statement: %w",
 			op,
@@ -170,11 +161,9 @@ func (s *Storage) AddToPass(
 
 	_, err := s.db.Exec(ctx, query, recordID, buildingID, id)
 	if err != nil {
-		fmt.Println("ошибка: ", err.Error())
 		return fmt.Errorf("unable to insert row: %w", err)
 	}
 
-	fmt.Println("успешно")
 	return nil
 }
 
@@ -230,10 +219,9 @@ func (s *Storage) DraftPassIDByCreator(
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			fmt.Println("error errnorows")
 			return "", errors.New("pass not found")
 		}
-		fmt.Println("error other")
+
 		return "", fmt.Errorf(
 			"%s: execute statement: %w",
 			op,
@@ -263,10 +251,9 @@ func (s *Storage) ItemsCount(ctx context.Context, uid string) (
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			fmt.Println("error errnorows")
 			return 0, errors.New("pass not found")
 		}
-		fmt.Println("error other")
+
 		return 0, fmt.Errorf(
 			"%s: execute statement: %w",
 			op,
@@ -284,13 +271,6 @@ func (s *Storage) PassesForUser(
 ) (*[]passService.PassModel, error) {
 	const op = "repository.passes.postgres.Passes"
 
-	fmt.Println("\n=== PassesForUser ===")
-	fmt.Println("Input parameters:")
-	fmt.Printf("uid: %s\n", uid)
-	fmt.Printf("statusFilter: %v\n", statusFilter)
-	fmt.Printf("beginDateFilter: %v\n", beginDateFilter)
-	fmt.Printf("endDateFilter: %v\n", endDateFilter)
-
 	query := `SELECT p.id, u.login, m.login, p.visitor, p.visit_date, p.status, p.formed_at 
 			FROM passes p 
 			LEFT JOIN users m ON p.moderator = m.id 
@@ -299,9 +279,6 @@ func (s *Storage) PassesForUser(
 
 	args := []interface{}{uid}
 	argNum := 2
-
-	fmt.Println("\nBuilding query:")
-	fmt.Printf("Base query: %s\n", query)
 
 	if statusFilter != nil {
 		query += fmt.Sprintf(" AND p.status = $%d", argNum)
@@ -325,11 +302,6 @@ func (s *Storage) PassesForUser(
 		args = append(args, *endDateFilter)
 		fmt.Printf("Added end date filter: %s\n", query)
 	}
-
-	fmt.Println("\nFinal query and args:")
-	fmt.Printf("Query: %s\n", query)
-	fmt.Printf("Args: %v\n", args)
-	fmt.Println("===================\n")
 
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
@@ -372,12 +344,6 @@ func (s *Storage) Passes(
 ) (*[]passService.PassModel, error) {
 	const op = "repository.passes.postgres.Passes"
 
-	fmt.Println("\n=== Passes ===")
-	fmt.Println("Input parameters:")
-	fmt.Printf("statusFilter: %v\n", statusFilter)
-	fmt.Printf("beginDateFilter: %v\n", beginDateFilter)
-	fmt.Printf("endDateFilter: %v\n", endDateFilter)
-
 	query := `SELECT p.id, u.login, m.login, p.visitor, p.visit_date, p.status, p.formed_at 
 			FROM passes p 
 			LEFT JOIN users m ON p.moderator = m.id 
@@ -387,36 +353,24 @@ func (s *Storage) Passes(
 	args := make([]interface{}, 0)
 	argNum := 1
 
-	fmt.Println("\nBuilding query:")
-	fmt.Printf("Base query: %s\n", query)
-
 	if statusFilter != nil {
 		query += fmt.Sprintf(" AND p.status = $%d", argNum)
 		args = append(args, *statusFilter)
 		argNum++
-		fmt.Printf("Added status filter: %s\n", query)
 	} else {
 		query += " AND NOT p.status = 0 AND NOT p.status = 4"
-		fmt.Printf("Added default status filter: %s\n", query)
 	}
 
 	if beginDateFilter != nil && !beginDateFilter.IsZero() {
 		query += fmt.Sprintf(" AND p.visit_date >= $%d", argNum)
 		args = append(args, *beginDateFilter)
 		argNum++
-		fmt.Printf("Added begin date filter: %s\n", query)
 	}
 
 	if endDateFilter != nil && !endDateFilter.IsZero() {
 		query += fmt.Sprintf(" AND p.visit_date <= $%d", argNum)
 		args = append(args, *endDateFilter)
-		fmt.Printf("Added end date filter: %s\n", query)
 	}
-
-	fmt.Println("\nFinal query and args:")
-	fmt.Printf("Query: %s\n", query)
-	fmt.Printf("Args: %v\n", args)
-	fmt.Println("===================\n")
 
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {

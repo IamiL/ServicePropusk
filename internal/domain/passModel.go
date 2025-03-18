@@ -1,7 +1,6 @@
 package model
 
 import (
-	"fmt"
 	"time"
 )
 
@@ -55,8 +54,6 @@ func (p *PassModel) GetHMTL(buildImagesHostname *string) *string {
 func (p *PassItems) getHtml(buildImagesHostname *string) *string {
 	var html string
 
-	fmt.Println("getHtml passItems, элементов: ", len(*p))
-
 	for _, passItem := range *p {
 		html += `<li><div class="cart-item-img"><img src="` + *buildImagesHostname + passItem.Building.ImgUrl +
 			`"></div><div class="cart-item-desc"><div>Услуга: ` + passItem.Building.Name +
@@ -64,8 +61,6 @@ func (p *PassItems) getHtml(buildImagesHostname *string) *string {
 			`</div></div><div class="cart-item-quantity">Комментарий: ` + passItem.Comment +
 			`</div></li>` + "\n"
 	}
-
-	fmt.Println("getHtml passItems, возвращаем: ", html)
 
 	return &html
 }

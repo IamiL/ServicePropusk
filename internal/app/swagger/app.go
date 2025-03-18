@@ -1,8 +1,8 @@
 package swagger
 
 import (
-	"fmt"
-	"log"
+	"log/slog"
+	"rip/internal/pkg/logger/sl"
 
 	_ "rip/docs" // Import swagger docs
 
@@ -12,7 +12,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-func RunSwagger(port string) {
+func RunSwagger(log *slog.Logger, port string) {
 	router := gin.Default()
 
 	// Configure CORS
@@ -60,8 +60,8 @@ func RunSwagger(port string) {
 	router.Static("/docs", "./docs")
 
 	// Start server
-	fmt.Println("Swagger UI is available at http://localhost:8002/swagger/index.html")
+	log.Info("Swagger UI is available at http://localhost:" + port + "/swagger/index.html")
 	if err := router.Run(":" + port); err != nil {
-		log.Fatal(err)
+		log.Error("swagger server start error", sl.Err(err))
 	}
 }
