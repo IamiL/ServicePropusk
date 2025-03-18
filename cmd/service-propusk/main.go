@@ -50,7 +50,7 @@ func main() {
 
 	go application.HTTPServer.MustRun()
 	go application.GraphQLServer.MustRun()
-	go application.RunSwagger("8002")
+	go application.RunSwagger(log, "8002")
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)

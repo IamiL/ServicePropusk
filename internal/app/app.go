@@ -24,7 +24,7 @@ import (
 type App struct {
 	HTTPServer    *httpapp.App
 	GraphQLServer *graphqlapp.App
-	RunSwagger    func(port string)
+	RunSwagger    func(log *slog.Logger, port string)
 }
 
 type Config struct {
