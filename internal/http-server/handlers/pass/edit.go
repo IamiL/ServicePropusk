@@ -43,15 +43,6 @@ func EditPassHandler(
 	*http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		token, err := r.Cookie("access_token")
-		if err != nil {
-			log.Debug("Error getting token", "error", err)
-			http_api.HandleError(w, http.StatusUnauthorized, "Unauthorized")
-			return
-		}
-
-		accessToken := token.Value
-
 		passID := r.PathValue("id")
 		if err := uuid.Validate(passID); err != nil {
 			http_api.HandleError(w, http.StatusBadRequest, "Invalid pass ID")
@@ -70,9 +61,9 @@ func EditPassHandler(
 			return
 		}
 
-		if err = pService.EditPass(
+		if err := pService.EditPass(
 			r.Context(),
-			accessToken,
+			"",
 			passID,
 			req.Visitor,
 			req.DateVisit,

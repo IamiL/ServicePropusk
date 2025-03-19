@@ -66,7 +66,7 @@ type PassSaver interface {
 		uid string,
 		status int,
 		visitor string,
-		visitDate time.Time,
+		visitDate *time.Time,
 	) error
 }
 
@@ -149,16 +149,10 @@ func (p *PassService) GetPassID(ctx context.Context, accessToken string) (
 	string,
 	error,
 ) {
-	uid, _, err := p.authService.Claims(accessToken)
-	if err != nil {
-		p.log.Info("Error getting token claims: ", sl.Err(err))
-		return "", bizErrors.ErrorAuthToken
-	}
-
-	id, err := p.passProvider.ID(ctx, uid)
+	id, err := p.passProvider.ID(ctx, "155ce20e-b039-4851-a775-2bf4d1e38c24")
 	if err != nil {
 		if errors.Is(err, repoErrors.ErrorNotFound) {
-			p.log.Info("pass not found, uid: ", uid)
+			p.log.Info("pass not found, uid: ")
 			return "", bizErrors.ErrorPassesNotFound
 		}
 
@@ -174,19 +168,13 @@ func (p *PassService) Pass(
 	accessToken string,
 	id string,
 ) (*model.PassModel, error) {
-	uid, isAdmin, err := p.authService.Claims(accessToken)
-	if err != nil {
-		return nil, err
-	}
-
 	pass, err := p.passProvider.Pass(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	if pass.CreatorID != uid && !isAdmin {
-		p.log.Info("недостаточно прав для просмотра заявки")
-		return nil, bizErrors.ErrorNoPermission
+	if pass.Status == consts.StatusDeleted {
+		return nil, bizErrors.ErrorPassNotFound
 	}
 
 	return pass, nil
@@ -197,12 +185,7 @@ func (p *PassService) AddBuildingToPass(
 	accessToken string,
 	buildingID string,
 ) error {
-	uid, _, err := p.authService.Claims(accessToken)
-	if err != nil {
-		return err
-	}
-
-	_, err = p.bProvider.Building(ctx, buildingID)
+	_, err := p.bProvider.Building(ctx, buildingID)
 	if err != nil {
 		if errors.Is(err, repoErrors.ErrorNotFound) {
 			p.log.Info("Building not found.")
@@ -212,17 +195,21 @@ func (p *PassService) AddBuildingToPass(
 		return bizErrors.ErrorInternalServer
 	}
 
-	passID, err := p.passProvider.DraftPassIDByCreator(ctx, uid)
+	passID, err := p.passProvider.DraftPassIDByCreator(
+		ctx,
+		"155ce20e-b039-4851-a775-2bf4d1e38c24",
+	)
 	if err != nil {
 		passID = uuid.NewString()
+		var visit_date *time.Time
 
 		err = p.passSaver.NewPass(
 			ctx,
 			passID,
-			uid,
+			"155ce20e-b039-4851-a775-2bf4d1e38c24",
 			consts.StatusDraft,
 			"",
-			time.Now(),
+			visit_date,
 		)
 		if err != nil {
 			p.log.Error("error: ", sl.Err(err))
@@ -252,11 +239,6 @@ func (p *PassService) Delete(
 	accessToken string,
 	passID string,
 ) error {
-	uid, _, err := p.authService.Claims(accessToken)
-	if err != nil {
-		return err
-	}
-
 	pass, err := p.passProvider.PassShort(ctx, passID)
 	if err != nil {
 		if errors.Is(err, repoErrors.ErrorNotFound) {
@@ -264,11 +246,8 @@ func (p *PassService) Delete(
 		}
 	}
 
-	if pass.CreatorID != uid {
-		return bizErrors.ErrorNoPermission
-	}
-
-	if !(pass.Status == consts.StatusDraft || pass.Status == consts.StatusFormed || pass.Status == consts.StatusCompleted || pass.Status == consts.StatusReject) {
+	if pass.Status != consts.StatusDraft {
+		p.log.Info("status pass to deleted: ", "status: ", pass.Status)
 		return bizErrors.ErrorCannotBeDeleted
 	}
 
@@ -293,12 +272,10 @@ func (p *PassService) GetPassItemsCount(
 	int,
 	error,
 ) {
-	uid, _, err := p.authService.Claims(accessToken)
-	if err != nil {
-		p.log.Info("Error getting token claims: ", sl.Err(err))
-	}
-
-	return p.passProvider.ItemsCount(ctx, uid)
+	return p.passProvider.ItemsCount(
+		ctx,
+		"155ce20e-b039-4851-a775-2bf4d1e38c24",
+	)
 }
 
 func (p *PassService) Passes(
@@ -308,44 +285,39 @@ func (p *PassService) Passes(
 	beginDateFilter *time.Time,
 	endDateFilter *time.Time,
 ) (*[]PassModel, error) {
-	uid, isAdmin, err := p.authService.Claims(accessToken)
-	if err != nil {
-		return nil, err
-	}
 
-	if isAdmin {
-		passes, err := p.passProvider.Passes(
-			ctx, statusFilter, beginDateFilter,
-			endDateFilter,
-		)
-		if err != nil {
-			if errors.Is(err, repoErrors.ErrorNotFound) {
-				return nil, bizErrors.ErrorPassesNotFound
-			}
-
-			p.log.Error("error get passes service: ", sl.Err(err))
-
-			return nil, bizErrors.ErrorInternalServer
-		}
-
-		return passes, nil
+	p.log.Info("запрос на пропуска")
+	if statusFilter != nil {
+		p.log.Info("фильтр", "status", *statusFilter)
 	} else {
-		passes, err := p.passProvider.PassesForUser(
-			ctx, uid, statusFilter, beginDateFilter,
-			endDateFilter,
-		)
-		if err != nil {
-			if errors.Is(err, repoErrors.ErrorNotFound) {
-				return nil, bizErrors.ErrorPassesNotFound
-			}
+		p.log.Info("без фильтра по статусу")
+	}
+	if beginDateFilter != nil {
+		p.log.Info("фильтр", "beginDate", *beginDateFilter)
+	} else {
+		p.log.Info("без фильтра по beginDate")
+	}
+	if endDateFilter != nil {
+		p.log.Info("фильтр", "endDate", *endDateFilter)
+	} else {
+		p.log.Info("без фильтра по endDate")
+	}
 
-			p.log.Error("error get passes service: ", sl.Err(err))
-
-			return nil, bizErrors.ErrorInternalServer
+	passes, err := p.passProvider.Passes(
+		ctx, statusFilter, beginDateFilter,
+		endDateFilter,
+	)
+	if err != nil {
+		if errors.Is(err, repoErrors.ErrorNotFound) {
+			return nil, bizErrors.ErrorPassesNotFound
 		}
 
-		return passes, nil
+		p.log.Error("error get passes service: ", sl.Err(err))
+
+		return nil, bizErrors.ErrorInternalServer
 	}
+
+	return passes, nil
 }
 
 type PassModel struct {
@@ -369,20 +341,11 @@ func (p *PassService) EditPass(
 	visitor string,
 	dateVisit time.Time,
 ) error {
-	uid, _, err := p.authService.Claims(accessToken)
-	if err != nil {
-		return err
-	}
-
 	pass, err := p.passProvider.PassShort(ctx, passID)
 	if err != nil {
 		if errors.Is(err, repoErrors.ErrorNotFound) {
 			return bizErrors.ErrorInvalidPass
 		}
-	}
-
-	if pass.CreatorID != uid {
-		return bizErrors.ErrorNoPermission
 	}
 
 	if pass.Status == consts.StatusCompleted {
@@ -408,11 +371,6 @@ func (p *PassService) ToForm(
 	accessToken string,
 	passID string,
 ) error {
-	uid, _, err := p.authService.Claims(accessToken)
-	if err != nil {
-		return err
-	}
-
 	pass, err := p.passProvider.Pass(ctx, passID)
 	if err != nil {
 		if errors.Is(err, repoErrors.ErrorNotFound) {
@@ -425,10 +383,6 @@ func (p *PassService) ToForm(
 
 	if pass.Status != consts.StatusDraft {
 		return bizErrors.ErrorStatusNotDraft
-	}
-
-	if pass.CreatorID != uid {
-		return bizErrors.ErrorNoPermission
 	}
 
 	if len(pass.Items) == 0 {
@@ -505,16 +459,6 @@ func (p *PassService) CompletePass(
 	accessToken string,
 	passID string,
 ) error {
-	uid, isAdmin, err := p.authService.Claims(accessToken)
-	if err != nil {
-		return err
-	}
-
-	if !isAdmin {
-		p.log.Info("I don't have enough rights.")
-		return bizErrors.ErrorNoPermission
-	}
-
 	pass, err := p.passProvider.PassShort(ctx, passID)
 	if err != nil {
 		if errors.Is(err, repoErrors.ErrorNotFound) {
@@ -530,7 +474,11 @@ func (p *PassService) CompletePass(
 	}
 
 	if err := p.passEditor.EditPassStatusByModerator(
-		ctx, passID, consts.StatusCompleted, time.Now(), uid,
+		ctx,
+		passID,
+		consts.StatusCompleted,
+		time.Now(),
+		"155ce20e-b039-4851-a775-2bf4d1e38c24",
 	); err != nil {
 		if errors.Is(err, repoErrors.ErrorNotFound) {
 			return bizErrors.ErrorInvalidPass

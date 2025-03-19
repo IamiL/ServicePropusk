@@ -4,9 +4,9 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
-	http_api "service-propusk-backend/internal/pkg/http-api"
-	buildService "service-propusk-backend/internal/service/building"
+	bizErrors "rip/internal/pkg/errors/biz"
+	http_api "rip/internal/pkg/http-api"
+	buildService "rip/internal/service/building"
 
 	"github.com/google/uuid"
 )
@@ -32,6 +32,7 @@ func DeleteBuildingHandler(
 	w http.ResponseWriter, r *http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Info("url: ", "url", r.RequestURI)
 		token, err := r.Cookie("access_token")
 		if err != nil {
 			log.Debug("Error getting token", "error", err)
@@ -39,9 +40,12 @@ func DeleteBuildingHandler(
 			return
 		}
 
+		log.Info("access_token", "token", token)
+
 		accessToken := token.Value
 
 		buildingID := r.PathValue("id")
+		log.Info("buildings id", "id", buildingID)
 		if err := uuid.Validate(buildingID); err != nil {
 			http_api.HandleError(
 				w,

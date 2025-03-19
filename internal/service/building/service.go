@@ -147,23 +147,13 @@ func (s *BuildingService) AddBuilding(
 	name string,
 	description string,
 ) error {
-	_, isAdmin, err := s.authService.Claims(accessToken)
-	if err != nil {
-		return bizErrors.ErrorAuthToken
-	}
-
-	if !isAdmin {
-		s.log.Info("I don't have enough rights to edit the case.")
-		return bizErrors.ErrorNoPermission
-	}
-
 	building := model.BuildingModel{
 		Id:          uuid.NewString(),
 		Name:        name,
 		Description: description,
 	}
 
-	err = s.bSaver.SaveBuilding(ctx, &building)
+	err := s.bSaver.SaveBuilding(ctx, &building)
 	if err != nil {
 		s.log.Error("error new building: ", sl.Err(err))
 		return bizErrors.ErrorInternalServer
@@ -263,20 +253,7 @@ func (s *BuildingService) EditBuildingPreview(
 	id string,
 	photo []byte,
 ) error {
-	// Проверяем права доступа
-	_, isAdmin, err := s.authService.Claims(accessToken)
-	if err != nil {
-		s.log.Error("failed to check auth claims", sl.Err(err))
-		return bizErrors.ErrorAuthToken
-	}
-
-	if !isAdmin {
-		s.log.Info("user doesn't have permission to edit building preview")
-		return bizErrors.ErrorNoPermission
-	}
-
-	// Проверяем существование здания
-	_, err = s.bProvider.Building(ctx, id)
+	_, err := s.bProvider.Building(ctx, id)
 	if err != nil {
 		if errors.Is(err, repoErrors.ErrorNotFound) {
 			s.log.Info("building not found", "id", id)

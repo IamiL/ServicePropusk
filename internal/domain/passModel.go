@@ -10,7 +10,7 @@ type PassModel struct {
 	CreatorID   string
 	Items       PassItems
 	VisitorName string
-	DateVisit   time.Time
+	DateVisit   *time.Time
 }
 
 type PassItem struct {

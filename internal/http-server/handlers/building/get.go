@@ -49,30 +49,23 @@ func BuildingsHandler(
 		var passIDResp *string
 		var PassItemsCountResp *int
 
-		token, err := r.Cookie("access_token")
+		passID, err := passService.GetPassID(r.Context(), "")
 		if err != nil {
-			log.Debug("Token missing in cookie", "error", err)
+			log.Info("Error getting pass ID", sl.Err(err))
 		} else {
-			accessToken := token.Value
-
-			passID, err := passService.GetPassID(r.Context(), accessToken)
-			if err != nil {
-				log.Info("Error getting pass ID", sl.Err(err))
-			} else {
-				if len(passID) != 0 {
-					passIDResp = &passID
-				}
+			if len(passID) != 0 {
+				passIDResp = &passID
 			}
+		}
 
-			passItemsCount, err := passService.GetPassItemsCount(
-				r.Context(),
-				accessToken,
-			)
-			if err != nil {
-				log.Info("Error getting pass items count", sl.Err(err))
-			} else {
-				PassItemsCountResp = &passItemsCount
-			}
+		passItemsCount, err := passService.GetPassItemsCount(
+			r.Context(),
+			"",
+		)
+		if err != nil {
+			log.Info("Error getting pass items count", sl.Err(err))
+		} else {
+			PassItemsCountResp = &passItemsCount
 		}
 
 		var buildings *[]model.BuildingModel

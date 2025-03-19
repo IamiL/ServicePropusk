@@ -4,7 +4,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	bizErrors "rip/internal/pkg/errors/biz"
 
 	http_api "rip/internal/pkg/http-api"
 	pService "rip/internal/service/pass"
@@ -33,15 +33,6 @@ func AddToPassHandler(
 	w http.ResponseWriter, r *http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		token, err := r.Cookie("access_token")
-		if err != nil {
-			log.Debug("Error getting token", "error", err)
-			http_api.HandleError(w, http.StatusUnauthorized, "Unauthorized")
-			return
-		}
-
-		accessToken := token.Value
-
 		buildingID := r.PathValue("id")
 		if err := uuid.Validate(buildingID); err != nil {
 			http_api.HandleError(
@@ -54,7 +45,7 @@ func AddToPassHandler(
 
 		if err := passService.AddBuildingToPass(
 			r.Context(),
-			accessToken,
+			"",
 			buildingID,
 		); err != nil {
 			var status int

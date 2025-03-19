@@ -200,7 +200,7 @@ func (a *App) Stop() {
 func corsMiddleware(log *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
-			log.Info("origin: ", r.Header.Get("origin"))
+			//log.Info("origin: ", r.Header.Get("origin"))
 
 			// Определяем Origin запроса
 			origin := r.Header.Get("Origin")

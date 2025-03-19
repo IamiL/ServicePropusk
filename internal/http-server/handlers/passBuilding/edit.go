@@ -43,15 +43,6 @@ func PutPassBuilding(
 	*http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		token, err := r.Cookie("access_token")
-		if err != nil {
-			log.Debug("Error getting token", "error", err)
-			http_api.HandleError(w, http.StatusUnauthorized, "Unauthorized")
-			return
-		}
-
-		accessToken := token.Value
-
 		passID := r.PathValue("passId")
 		if err := uuid.Validate(passID); err != nil {
 			http_api.HandleError(w, http.StatusBadRequest, "Invalid pass ID")
@@ -81,7 +72,7 @@ func PutPassBuilding(
 
 		if err := passBuildingService.Edit(
 			r.Context(),
-			accessToken,
+			"",
 			passID,
 			buildingID,
 			req.Comment,

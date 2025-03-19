@@ -61,11 +61,6 @@ func (s *PassBuildingService) Edit(
 	buildingID string,
 	newComment string,
 ) error {
-	uid, _, err := s.authService.Claims(accessToken)
-	if err != nil {
-		return err
-	}
-
 	pass, err := s.passProvider.PassShort(ctx, passID)
 	if err != nil {
 		if errors.Is(err, repoErrors.ErrorNotFound) {
@@ -74,10 +69,6 @@ func (s *PassBuildingService) Edit(
 
 		s.log.Error("error edit passbuilding get pass: ", sl.Err(err))
 		return bizErrors.ErrorInternalServer
-	}
-
-	if pass.CreatorID != uid {
-		return bizErrors.ErrorInvalidPass
 	}
 
 	if pass.Status != consts.StatusDraft {

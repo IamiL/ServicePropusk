@@ -37,15 +37,6 @@ func NewBuildingHandler(
 	w http.ResponseWriter, r *http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		token, err := r.Cookie("access_token")
-		if err != nil {
-			log.Debug("Error getting token", "error", err)
-			http_api.HandleError(w, http.StatusUnauthorized, "Unauthorized")
-			return
-		}
-
-		accessToken := token.Value
-
 		var req NewBuildingReq
 
 		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -60,7 +51,7 @@ func NewBuildingHandler(
 
 		if err := buildingsService.AddBuilding(
 			r.Context(),
-			accessToken,
+			"",
 			req.Name,
 			req.Description,
 		); err != nil {

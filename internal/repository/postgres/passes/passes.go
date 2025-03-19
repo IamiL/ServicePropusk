@@ -7,6 +7,7 @@ import (
 	model "rip/internal/domain"
 	repoErrors "rip/internal/pkg/errors/repo"
 	passService "rip/internal/service/pass"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -76,6 +77,7 @@ func (s *Storage) Pass(ctx context.Context, id string) (
 			err,
 		)
 	}
+	fmt.Println("date visit: ", pass.DateVisit)
 
 	query = `SELECT b.id, b.name, b.description, b.img_url, bs.comment FROM buildings_passes bs JOIN buildings b ON bs.building = b.id WHERE pass = $1`
 
@@ -184,9 +186,9 @@ func (s *Storage) NewPass(
 	uid string,
 	status int,
 	visitor string,
-	visitDate time.Time,
+	visitDate *time.Time,
 ) error {
-	query := `INSERT INTO passes (id, creator, created_at, visitor, visit_date, status) VALUES ($1, $2, $3, $4, $5, $6);`
+	query := `INSERT INTO passes (id, creator, created_at, visitor, status) VALUES ($1, $2, $3, $4, $5);`
 
 	if _, err := s.db.Exec(
 		ctx,
@@ -195,7 +197,6 @@ func (s *Storage) NewPass(
 		uid,
 		time.Now(),
 		visitor,
-		visitDate,
 		status,
 	); err != nil {
 		return fmt.Errorf("unable to insert row: %w", err)
@@ -362,16 +363,21 @@ func (s *Storage) Passes(
 	}
 
 	if beginDateFilter != nil && !beginDateFilter.IsZero() {
-		query += fmt.Sprintf(" AND p.visit_date >= $%d", argNum)
+		query += fmt.Sprintf(" AND p.formed_at >= $%d", argNum)
 		args = append(args, *beginDateFilter)
 		argNum++
 	}
 
 	if endDateFilter != nil && !endDateFilter.IsZero() {
-		query += fmt.Sprintf(" AND p.visit_date <= $%d", argNum)
+		query += fmt.Sprintf(" AND p.formed_at <= $%d", argNum)
 		args = append(args, *endDateFilter)
 	}
 
+	fmt.Println("query: ")
+	fmt.Println(query)
+	fmt.Println("args: ")
+	fmt.Println(args)
+	fmt.Println("Completed Query: ", getFormattedQuery(query, args))
 	rows, err := s.db.Query(ctx, query, args...)
 	if err != nil {
 		return nil, fmt.Errorf("%s: execute statement: %w", op, err)
@@ -404,6 +410,27 @@ func (s *Storage) Passes(
 	}
 
 	return &services, nil
+}
+
+func getFormattedQuery(query string, args []interface{}) string {
+	for i, arg := range args {
+		placeholder := fmt.Sprintf("$%d", i+1)
+		var argValue string
+
+		switch v := arg.(type) {
+		case int, int64, float64, float32, bool:
+			argValue = fmt.Sprintf("%v", v)
+		case string:
+			argValue = fmt.Sprintf("'%v'", v)
+		case time.Time:
+			argValue = fmt.Sprintf("'%v'", v.Format("2006-01-02 15:04:05"))
+		default:
+			argValue = fmt.Sprintf("'%v'", v)
+		}
+
+		query = strings.Replace(query, placeholder, argValue, 1)
+	}
+	return query
 }
 
 func (s *Storage) EditPass(

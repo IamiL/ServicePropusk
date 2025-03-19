@@ -34,15 +34,6 @@ func ToFormHandler(
 	return func(
 		w http.ResponseWriter, r *http.Request,
 	) {
-		token, err := r.Cookie("access_token")
-		if err != nil {
-			log.Debug("Error getting token", "error", err)
-			http_api.HandleError(w, http.StatusUnauthorized, "Unauthorized")
-			return
-		}
-
-		accessToken := token.Value
-
 		passID := r.PathValue("id")
 		if err := uuid.Validate(passID); err != nil {
 			http_api.HandleError(w, http.StatusBadRequest, "Invalid pass ID")
@@ -51,7 +42,7 @@ func ToFormHandler(
 
 		if err := pService.ToForm(
 			r.Context(),
-			accessToken,
+			"",
 			passID,
 		); err != nil {
 			var status int
