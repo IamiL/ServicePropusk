@@ -5,11 +5,11 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	model "rip/internal/domain"
-	bizErrors "rip/internal/pkg/errors/biz"
-	repoErrors "rip/internal/pkg/errors/repo"
-	"rip/internal/pkg/logger/sl"
-	postgresBuilds "rip/internal/repository/postgres/buildings"
+	model "service-propusk-backend/internal/domain"
+	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	repoErrors "service-propusk-backend/internal/pkg/errors/repo"
+	"service-propusk-backend/internal/pkg/logger/sl"
+	postgresBuilds "service-propusk-backend/internal/repository/postgres/buildings"
 
 	"github.com/google/uuid"
 )

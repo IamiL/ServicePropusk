@@ -10,12 +10,13 @@ type PassModel struct {
 	CreatorID   string
 	Items       PassItems
 	VisitorName string
-	DateVisit   time.Time
+	DateVisit   *time.Time
 }
 
 type PassItem struct {
-	Building *BuildingModel
-	Comment  string
+	Building   *BuildingModel
+	Comment    string
+	WasVisited *bool
 }
 
 type PassItems []*PassItem

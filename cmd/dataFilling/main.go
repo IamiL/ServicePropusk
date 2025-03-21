@@ -1,13 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"log/slog"
-	"rip/internal/config"
-	"rip/internal/pkg/logger/sl"
-	"rip/internal/repository/postgres"
-	postgresBuilds "rip/internal/repository/postgres/buildings"
-	minioRepository "rip/internal/repository/s3minio"
+	"os"
+	"service-propusk-backend/internal/config"
+	"service-propusk-backend/internal/pkg/logger/handlers/slogpretty"
+	"service-propusk-backend/internal/pkg/logger/sl"
+	"service-propusk-backend/internal/repository/postgres"
+	postgresBuilds "service-propusk-backend/internal/repository/postgres/buildings"
+	minioRepository "service-propusk-backend/internal/repository/s3minio"
 )
 
 const (

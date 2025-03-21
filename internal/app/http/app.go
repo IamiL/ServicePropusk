@@ -5,19 +5,19 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	handler_mux_v1 "rip/internal/http-server/handlers/building"
-	passhandler "rip/internal/http-server/handlers/pass"
-	passBuildingHandler "rip/internal/http-server/handlers/passBuilding"
-	userHandler "rip/internal/http-server/handlers/user"
-	"rip/internal/pkg/logger/sl"
-	authService "rip/internal/service/auth"
-	buildingService "rip/internal/service/building"
-	passService "rip/internal/service/pass"
-	passBuildingService "rip/internal/service/passBuilding"
-	userService "rip/internal/service/user"
+	handler_mux_v1 "service-propusk-backend/internal/http-server/handlers/building"
+	passhandler "service-propusk-backend/internal/http-server/handlers/pass"
+	passBuildingHandler "service-propusk-backend/internal/http-server/handlers/passBuilding"
+	userHandler "service-propusk-backend/internal/http-server/handlers/user"
+	"service-propusk-backend/internal/pkg/logger/sl"
+	authService "service-propusk-backend/internal/service/auth"
+	buildingService "service-propusk-backend/internal/service/building"
+	passService "service-propusk-backend/internal/service/pass"
+	passBuildingService "service-propusk-backend/internal/service/passBuilding"
+	userService "service-propusk-backend/internal/service/user"
 	"time"
 
-	_ "rip/docs" // Import swagger docs
+	_ "service-propusk-backend/docs" // Import swagger docs
 
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -92,7 +92,7 @@ func New(
 	)
 	router.HandleFunc(
 		"GET /passes/{id}",
-		passhandler.PassHandler(log, passService),
+		passhandler.PassHandler(log, passService, true),
 	)
 	router.HandleFunc(
 		"PUT /passes/{id}",
@@ -139,6 +139,11 @@ func New(
 	router.HandleFunc(
 		"POST /users/logout",
 		userHandler.LogoutHandler(log, userService),
+	)
+
+	router.HandleFunc(
+		"GET /qr/{id}",
+		passhandler.PassHandler(log, passService, false),
 	)
 
 	// Применяем middleware в правильном порядке

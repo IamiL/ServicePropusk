@@ -4,14 +4,14 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
-	_ "rip/docs" // Import swagger docs
-	appService "rip/internal/app"
-	"rip/internal/config"
-	"rip/internal/pkg/logger/handlers/slogpretty"
+	_ "service-propusk-backend/docs" // Import swagger docs
+	appService "service-propusk-backend/internal/app"
+	"service-propusk-backend/internal/config"
+	"service-propusk-backend/internal/pkg/logger/handlers/slogpretty"
 	"syscall"
 )
 
-// @title           RIP API
+// @title           Service-propusk API
 // @version         1.0
 // @description     API for managing buildings and passes.
 // @termsOfService  http://swagger.io/terms/

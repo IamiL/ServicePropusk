@@ -4,9 +4,9 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	bizErrors "rip/internal/pkg/errors/biz"
-	http_api "rip/internal/pkg/http-api"
-	passBuildingService "rip/internal/service/passBuilding"
+	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	http_api "service-propusk-backend/internal/pkg/http-api"
+	passBuildingService "service-propusk-backend/internal/service/passBuilding"
 
 	"github.com/google/uuid"
 )

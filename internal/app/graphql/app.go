@@ -2,10 +2,10 @@ package graphqlapp
 
 import (
 	"log/slog"
-	"rip/graph"
+	"service-propusk-backend/graph"
 
-	"rip/graph/generated"
-	buildingService "rip/internal/service/building"
+	"service-propusk-backend/graph/generated"
+	buildingService "service-propusk-backend/internal/service/building"
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"

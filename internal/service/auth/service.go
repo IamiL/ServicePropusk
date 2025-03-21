@@ -4,9 +4,9 @@ import (
 	"context"
 	"golang.org/x/crypto/bcrypt"
 	"log/slog"
-	bizErrors "rip/internal/pkg/errors/biz"
-	jwtToken "rip/internal/pkg/jwt"
-	"rip/internal/pkg/logger/sl"
+	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	jwtToken "service-propusk-backend/internal/pkg/jwt"
+	"service-propusk-backend/internal/pkg/logger/sl"
 	"time"
 )
 

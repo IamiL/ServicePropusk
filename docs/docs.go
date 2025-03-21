@@ -1536,10 +1536,10 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:8000",
+	Host:             "172.17.17.145:8000",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "RIP API",
+	Title:            "Service-propusk API",
 	Description:      "API for managing buildings and passes.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,

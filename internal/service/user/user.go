@@ -6,8 +6,8 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"log/slog"
-	bizErrors "rip/internal/pkg/errors/biz"
-	"rip/internal/pkg/logger/sl"
+	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	"service-propusk-backend/internal/pkg/logger/sl"
 	"unicode/utf8"
 )
 

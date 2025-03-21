@@ -3,21 +3,21 @@ package app
 import (
 	"log/slog"
 	"net"
-	graphqlapp "rip/internal/app/graphql"
-	httpapp "rip/internal/app/http"
-	"rip/internal/app/swagger"
-	"rip/internal/repository/JWTsecret"
-	"rip/internal/repository/postgres"
-	postgresBuilds "rip/internal/repository/postgres/buildings"
-	postgresPasses "rip/internal/repository/postgres/passes"
-	postgresUser "rip/internal/repository/postgres/user"
-	"rip/internal/repository/s3minio"
-	minioRepository "rip/internal/repository/s3minio"
-	authService "rip/internal/service/auth"
-	buildService "rip/internal/service/building"
-	passService "rip/internal/service/pass"
-	passBuildingService "rip/internal/service/passBuilding"
-	userService "rip/internal/service/user"
+	graphqlapp "service-propusk-backend/internal/app/graphql"
+	httpapp "service-propusk-backend/internal/app/http"
+	"service-propusk-backend/internal/app/swagger"
+	"service-propusk-backend/internal/repository/JWTsecret"
+	"service-propusk-backend/internal/repository/postgres"
+	postgresBuilds "service-propusk-backend/internal/repository/postgres/buildings"
+	postgresPasses "service-propusk-backend/internal/repository/postgres/passes"
+	postgresUser "service-propusk-backend/internal/repository/postgres/user"
+	"service-propusk-backend/internal/repository/s3minio"
+	minioRepository "service-propusk-backend/internal/repository/s3minio"
+	authService "service-propusk-backend/internal/service/auth"
+	buildService "service-propusk-backend/internal/service/building"
+	passService "service-propusk-backend/internal/service/pass"
+	passBuildingService "service-propusk-backend/internal/service/passBuilding"
+	userService "service-propusk-backend/internal/service/user"
 	"time"
 )
 
@@ -101,7 +101,6 @@ func New(
 
 	passService := passService.New(
 		log,
-		passRepository,
 		passRepository,
 		passRepository,
 		passRepository,

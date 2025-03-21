@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	model "rip/internal/domain"
-	repoErrors "rip/internal/pkg/errors/repo"
-	passService "rip/internal/service/pass"
+	model "service-propusk-backend/internal/domain"
+	repoErrors "service-propusk-backend/internal/pkg/errors/repo"
+	passService "service-propusk-backend/internal/service/pass"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -77,7 +77,7 @@ func (s *Storage) Pass(ctx context.Context, id string) (
 		)
 	}
 
-	query = `SELECT b.id, b.name, b.description, b.img_url, bs.comment FROM buildings_passes bs JOIN buildings b ON bs.building = b.id WHERE pass = $1`
+	query = `SELECT b.id, b.name, b.description, b.img_url, bs.comment, bs.was_used FROM buildings_passes bs JOIN buildings b ON bs.building = b.id WHERE pass = $1`
 
 	rows, err := s.db.Query(ctx, query, id)
 	if err != nil {
@@ -104,6 +104,7 @@ func (s *Storage) Pass(ctx context.Context, id string) (
 			&item.Building.Description,
 			&item.Building.ImgUrl,
 			&c,
+			&item.WasVisited,
 		)
 		if err != nil {
 			return &model.PassModel{}, fmt.Errorf(
@@ -167,26 +168,15 @@ func (s *Storage) AddToPass(
 	return nil
 }
 
-func (s *Storage) Delete(ctx context.Context, id string) error {
-	query := `UPDATE passes SET status = 1, formation_date = $1 WHERE id = $2;`
-
-	_, err := s.db.Exec(ctx, query, time.Now(), id)
-	if err != nil {
-		return fmt.Errorf("unable to insert row: %w", err)
-	}
-
-	return nil
-}
-
 func (s *Storage) NewPass(
 	ctx context.Context,
 	id string,
 	uid string,
 	status int,
 	visitor string,
-	visitDate time.Time,
+	visitDate *time.Time,
 ) error {
-	query := `INSERT INTO passes (id, creator, created_at, visitor, visit_date, status) VALUES ($1, $2, $3, $4, $5, $6);`
+	query := `INSERT INTO passes (id, creator, created_at, visitor, status) VALUES ($1, $2, $3, $4, $5);`
 
 	if _, err := s.db.Exec(
 		ctx,
@@ -195,7 +185,6 @@ func (s *Storage) NewPass(
 		uid,
 		time.Now(),
 		visitor,
-		visitDate,
 		status,
 	); err != nil {
 		return fmt.Errorf("unable to insert row: %w", err)
@@ -284,23 +273,19 @@ func (s *Storage) PassesForUser(
 		query += fmt.Sprintf(" AND p.status = $%d", argNum)
 		args = append(args, *statusFilter)
 		argNum++
-		fmt.Printf("Added status filter: %s\n", query)
 	} else {
 		query += " AND NOT p.status = 0 AND NOT p.status = 4"
-		fmt.Printf("Added default status filter: %s\n", query)
 	}
 
 	if beginDateFilter != nil && !beginDateFilter.IsZero() {
-		query += fmt.Sprintf(" AND p.visit_date >= $%d", argNum)
+		query += fmt.Sprintf(" AND p.formed_at >= $%d", argNum)
 		args = append(args, *beginDateFilter)
 		argNum++
-		fmt.Printf("Added begin date filter: %s\n", query)
 	}
 
 	if endDateFilter != nil && !endDateFilter.IsZero() {
-		query += fmt.Sprintf(" AND p.visit_date <= $%d", argNum)
+		query += fmt.Sprintf(" AND p.formed_at <= $%d", argNum)
 		args = append(args, *endDateFilter)
-		fmt.Printf("Added end date filter: %s\n", query)
 	}
 
 	rows, err := s.db.Query(ctx, query, args...)
@@ -362,13 +347,13 @@ func (s *Storage) Passes(
 	}
 
 	if beginDateFilter != nil && !beginDateFilter.IsZero() {
-		query += fmt.Sprintf(" AND p.visit_date >= $%d", argNum)
+		query += fmt.Sprintf(" AND p.formed_at >= $%d", argNum)
 		args = append(args, *beginDateFilter)
 		argNum++
 	}
 
 	if endDateFilter != nil && !endDateFilter.IsZero() {
-		query += fmt.Sprintf(" AND p.visit_date <= $%d", argNum)
+		query += fmt.Sprintf(" AND p.formed_at <= $%d", argNum)
 		args = append(args, *endDateFilter)
 	}
 

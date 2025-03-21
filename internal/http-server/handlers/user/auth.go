@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	authService "rip/internal/service/auth"
+	authService "service-propusk-backend/internal/service/auth"
 )
 
 // Credentials представляет учетные данные пользователя
@@ -46,6 +46,7 @@ func SigninHandler(
 			creds.Password,
 		)
 		if err != nil {
+			log.Info("error while signing in: " + err.Error())
 			w.WriteHeader(http.StatusUnauthorized)
 		}
 

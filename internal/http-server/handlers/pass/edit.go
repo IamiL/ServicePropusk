@@ -5,10 +5,10 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	bizErrors "rip/internal/pkg/errors/biz"
-	http_api "rip/internal/pkg/http-api"
-	"rip/internal/pkg/logger/sl"
-	passService "rip/internal/service/pass"
+	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	http_api "service-propusk-backend/internal/pkg/http-api"
+	"service-propusk-backend/internal/pkg/logger/sl"
+	passService "service-propusk-backend/internal/service/pass"
 	"time"
 
 	"github.com/google/uuid"
@@ -95,7 +95,42 @@ func EditPassHandler(
 			return
 		}
 
-		w.WriteHeader(http.StatusNoContent)
+		pass, _ := pService.Pass(r.Context(), accessToken, passID, true)
+
+		passResp := PassResp{
+			ID:          passID,
+			VisitorName: pass.VisitorName,
+			DateVisit:   pass.DateVisit,
+		}
+
+		if len(pass.Items) != 0 {
+			passItemsArr := make([]PassItem, 0, len(pass.Items))
+
+			for _, passItem := range pass.Items {
+				passItemsArr = append(
+					passItemsArr, PassItem{
+						Building{
+							passItem.Building.Id,
+							passItem.Building.Name,
+							passItem.Building.Description,
+							passItem.Building.ImgUrl,
+						},
+						passItem.Comment,
+						passItem.WasVisited,
+					},
+				)
+			}
+
+			passResp.Items = &passItemsArr
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+
+		if err := json.NewEncoder(w).Encode(
+			passResp,
+		); err != nil {
+			log.Info("Error encoding body: ", sl.Err(err))
+		}
 
 	}
 }

@@ -1,7 +1,7 @@
 package graph
 
 import (
-	buildingService "rip/internal/service/building"
+	buildingService "service-propusk-backend/internal/service/building"
 )
 
 // This file will not be regenerated automatically.

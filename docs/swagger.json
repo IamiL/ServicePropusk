@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "description": "API for managing buildings and passes.",
-        "title": "RIP API",
+        "title": "Service-propusk API",
         "termsOfService": "http://swagger.io/terms/",
         "contact": {
             "name": "API Support",
@@ -15,7 +15,7 @@
         },
         "version": "1.0"
     },
-    "host": "localhost:8000",
+    "host": "172.17.17.145:8000",
     "basePath": "/",
     "paths": {
         "/buildings": {
@@ -1518,7 +1518,7 @@
         }
     },
     "securityDefinitions": {
-        "ApiKeyAuth": {
+        "cookieAuth": {
             "description": "Enter your JWT token value",
             "type": "apiKey",
             "name": "X-Access-Token",

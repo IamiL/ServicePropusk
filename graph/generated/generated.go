@@ -7,7 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"rip/graph/model"
+	"service-propusk-backend/graph/model"
 	"strconv"
 	"sync"
 	"sync/atomic"

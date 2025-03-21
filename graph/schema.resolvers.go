@@ -7,8 +7,8 @@ package graph
 import (
 	"context"
 	"fmt"
-	"rip/graph/generated"
-	"rip/graph/model"
+	"service-propusk-backend/graph/generated"
+	"service-propusk-backend/graph/model"
 )
 
 // CreateBuilding is the resolver for the createBuilding field.

@@ -3,7 +3,7 @@ package userHandler
 import (
 	"log/slog"
 	"net/http"
-	userService "rip/internal/service/user"
+	userService "service-propusk-backend/internal/service/user"
 	"time"
 )
 

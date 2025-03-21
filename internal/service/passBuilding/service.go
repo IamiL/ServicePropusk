@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"log/slog"
-	"rip/internal/consts"
-	model "rip/internal/domain"
-	bizErrors "rip/internal/pkg/errors/biz"
-	repoErrors "rip/internal/pkg/errors/repo"
-	"rip/internal/pkg/logger/sl"
+	"service-propusk-backend/internal/consts"
+	model "service-propusk-backend/internal/domain"
+	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	repoErrors "service-propusk-backend/internal/pkg/errors/repo"
+	"service-propusk-backend/internal/pkg/logger/sl"
 )
 
 type PassBuildingService struct {

@@ -5,10 +5,10 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	bizErrors "rip/internal/pkg/errors/biz"
-	http_api "rip/internal/pkg/http-api"
-	"rip/internal/pkg/logger/sl"
-	userService "rip/internal/service/user"
+	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	http_api "service-propusk-backend/internal/pkg/http-api"
+	"service-propusk-backend/internal/pkg/logger/sl"
+	userService "service-propusk-backend/internal/service/user"
 )
 
 // RegistrationRequest представляет запрос на регистрацию

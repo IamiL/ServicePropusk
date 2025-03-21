@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	bizErrors "rip/internal/pkg/errors/biz"
-	http_api "rip/internal/pkg/http-api"
-	passService "rip/internal/service/pass"
+	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	http_api "service-propusk-backend/internal/pkg/http-api"
+	passService "service-propusk-backend/internal/service/pass"
 	"strconv"
 	"time"
 	"unicode/utf8"
@@ -272,17 +272,18 @@ func PassesHandler(
 // PassResp представляет полную информацию о пропуске
 // @Description Полная информация о пропуске
 type PassResp struct {
-	ID          string      `json:"id" example:"123e4567-e89b-12d3-a456-426614174000"` // ID пропуска
-	Items       *[]PassItem `json:"items,omitempty"`                                   // Список зданий в пропуске
-	VisitorName string      `json:"visitorName,omitempty" example:"Иван Иванов"`       // Имя посетителя
-	DateVisit   time.Time   `json:"dateVisit" example:"2024-03-10T12:00:00Z"`          // Дата посещения
+	ID          string      `json:"id" example:"123e4567-e89b-12d3-a456-426614174000"`  // ID пропуска
+	Items       *[]PassItem `json:"items,omitempty"`                                    // Список зданий в пропуске
+	VisitorName string      `json:"visitorName,omitempty" example:"Иван Иванов"`        // Имя посетителя
+	DateVisit   *time.Time  `json:"dateVisit,omitempty" example:"2024-03-10T12:00:00Z"` // Дата посещения
 }
 
 // PassItem представляет элемент пропуска
 // @Description Элемент пропуска (здание с комментарием)
 type PassItem struct {
-	Building Building `json:"building"`                               // Информация о здании
-	Comment  string   `json:"comment" example:"Комментарий к зданию"` // Комментарий к зданию
+	Building   Building `json:"building"`                               // Информация о здании
+	Comment    string   `json:"comment" example:"Комментарий к зданию"` // Комментарий к зданию
+	WasVisited *bool    `json:"was_visited,omitempty"`
 }
 
 // Building представляет информацию о здании в пропуске
@@ -308,19 +309,24 @@ type Building struct {
 // @Failure 500 {object} ErrorResponse
 // @Router /passes/{id} [get]
 // @Security ApiKeyAuth
-func PassHandler(log *slog.Logger, pService *passService.PassService) func(
+func PassHandler(
+	log *slog.Logger,
+	pService *passService.PassService,
+	protected bool,
+) func(
 	http.ResponseWriter,
 	*http.Request,
 ) {
 	return func(w http.ResponseWriter, r *http.Request) {
+		accessToken := ""
 		token, err := r.Cookie("access_token")
-		if err != nil {
+		if err != nil && protected {
 			log.Debug("Error getting token", "error", err)
 			http_api.HandleError(w, http.StatusUnauthorized, "Unauthorized")
 			return
 		}
 
-		accessToken := token.Value
+		accessToken = token.Value
 
 		passID := r.PathValue("id")
 		if err := uuid.Validate(passID); err != nil {
@@ -328,7 +334,7 @@ func PassHandler(log *slog.Logger, pService *passService.PassService) func(
 			return
 		}
 
-		pass, err := pService.Pass(r.Context(), accessToken, passID)
+		pass, err := pService.Pass(r.Context(), accessToken, passID, protected)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -353,6 +359,7 @@ func PassHandler(log *slog.Logger, pService *passService.PassService) func(
 							passItem.Building.ImgUrl,
 						},
 						passItem.Comment,
+						passItem.WasVisited,
 					},
 				)
 			}

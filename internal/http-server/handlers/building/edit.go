@@ -5,10 +5,10 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	bizErrors "rip/internal/pkg/errors/biz"
-	http_api "rip/internal/pkg/http-api"
-	"rip/internal/pkg/logger/sl"
-	buildService "rip/internal/service/building"
+	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	http_api "service-propusk-backend/internal/pkg/http-api"
+	"service-propusk-backend/internal/pkg/logger/sl"
+	buildService "service-propusk-backend/internal/service/building"
 
 	"github.com/google/uuid"
 )
@@ -94,6 +94,18 @@ func EditBuildingHandler(
 			return
 		}
 
-		w.WriteHeader(http.StatusNoContent)
+		building, _ := buildingsService.GetBuilding(r.Context(), buildingID)
+
+		w.Header().Set("Content-Type", "application/json")
+		if err := json.NewEncoder(w).Encode(
+			BuildingResp{
+				building.Id,
+				building.Name,
+				building.Description,
+				building.ImgUrl,
+			},
+		); err != nil {
+			log.Info("Error encoding body: ", sl.Err(err))
+		}
 	}
 }

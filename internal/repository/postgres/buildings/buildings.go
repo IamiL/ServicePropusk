@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	model "rip/internal/domain"
-	repoErrors "rip/internal/pkg/errors/repo"
+	model "service-propusk-backend/internal/domain"
+	repoErrors "service-propusk-backend/internal/pkg/errors/repo"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

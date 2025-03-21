@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	_ "rip/docs" // Import swagger docs
+	_ "service-propusk-backend/docs" // Import swagger docs
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"

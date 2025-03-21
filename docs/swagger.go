@@ -1,6 +1,6 @@
 package docs
 
-// @title           RIP API
+// @title           Service-propusk API
 // @version         1.0
 // @description     API for managing buildings and passes.
 // @termsOfService  http://swagger.io/terms/

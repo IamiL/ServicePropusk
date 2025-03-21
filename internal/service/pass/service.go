@@ -4,24 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/skip2/go-qrcode"
 	"log/slog"
-	"rip/internal/consts"
-	model "rip/internal/domain"
-	bizErrors "rip/internal/pkg/errors/biz"
-	repoErrors "rip/internal/pkg/errors/repo"
-	"rip/internal/pkg/logger/sl"
+	"service-propusk-backend/internal/consts"
+	model "service-propusk-backend/internal/domain"
+	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	repoErrors "service-propusk-backend/internal/pkg/errors/repo"
+	"service-propusk-backend/internal/pkg/logger/sl"
 	"time"
 
 	"github.com/google/uuid"
-
-	"github.com/skip2/go-qrcode"
 )
 
 type PassService struct {
 	log                 *slog.Logger
 	passProvider        PassProvider
 	passSaver           PassSaver
-	passDeleter         PassDeleter
 	passEditor          PassEditor
 	bProvider           BuildingProvider
 	authService         AuthService
@@ -66,12 +64,8 @@ type PassSaver interface {
 		uid string,
 		status int,
 		visitor string,
-		visitDate time.Time,
+		visitDate *time.Time,
 	) error
-}
-
-type PassDeleter interface {
-	Delete(ctx context.Context, id string) error
 }
 
 type PassEditor interface {
@@ -125,7 +119,6 @@ func New(
 	log *slog.Logger,
 	passProvider PassProvider,
 	passSaver PassSaver,
-	passDeleter PassDeleter,
 	passEditor PassEditor,
 	buildingProvider BuildingProvider,
 	authService AuthService,
@@ -136,7 +129,6 @@ func New(
 		log:                 log,
 		passProvider:        passProvider,
 		passSaver:           passSaver,
-		passDeleter:         passDeleter,
 		passEditor:          passEditor,
 		bProvider:           buildingProvider,
 		authService:         authService,
@@ -173,9 +165,10 @@ func (p *PassService) Pass(
 	ctx context.Context,
 	accessToken string,
 	id string,
+	protected bool,
 ) (*model.PassModel, error) {
 	uid, isAdmin, err := p.authService.Claims(accessToken)
-	if err != nil {
+	if err != nil && protected {
 		return nil, err
 	}
 
@@ -184,7 +177,7 @@ func (p *PassService) Pass(
 		return nil, err
 	}
 
-	if pass.CreatorID != uid && !isAdmin {
+	if pass.CreatorID != uid && !isAdmin && protected {
 		p.log.Info("недостаточно прав для просмотра заявки")
 		return nil, bizErrors.ErrorNoPermission
 	}
@@ -222,7 +215,7 @@ func (p *PassService) AddBuildingToPass(
 			uid,
 			consts.StatusDraft,
 			"",
-			time.Now(),
+			nil,
 		)
 		if err != nil {
 			p.log.Error("error: ", sl.Err(err))
@@ -268,7 +261,7 @@ func (p *PassService) Delete(
 		return bizErrors.ErrorNoPermission
 	}
 
-	if !(pass.Status == consts.StatusDraft || pass.Status == consts.StatusFormed || pass.Status == consts.StatusCompleted || pass.Status == consts.StatusReject) {
+	if pass.Status != consts.StatusDraft {
 		return bizErrors.ErrorCannotBeDeleted
 	}
 
@@ -454,6 +447,31 @@ func (p *PassService) ToForm(
 		return err
 	}
 
+	// Generate QR code
+	qr, err := qrcode.New(
+		fmt.Sprintf(
+			"https://172.17.17.145:3000/pass/%s/info",
+			passID,
+		), qrcode.Medium,
+	)
+	if err != nil {
+		p.log.Error("failed to generate QR code", sl.Err(err))
+		return bizErrors.ErrorInternalServer
+	}
+
+	// Get PNG bytes
+	png, err := qr.PNG(256)
+	if err != nil {
+		p.log.Error("failed to encode QR code as PNG", sl.Err(err))
+		return bizErrors.ErrorInternalServer
+	}
+
+	// Save QR code to MinIO
+	if err := p.qrCodeSaver.SaveQRCode(ctx, passID, png); err != nil {
+		p.log.Error("failed to save QR code to storage", sl.Err(err))
+		return bizErrors.ErrorInternalServer
+	}
+
 	return nil
 }
 
@@ -545,31 +563,6 @@ func (p *PassService) CompletePass(
 		passID,
 	); err != nil {
 		p.log.Error("error save was visited for pass: ", sl.Err(err))
-	}
-
-	// Generate QR code
-	qr, err := qrcode.New(
-		fmt.Sprintf(
-			"https://172.20.10.5:3000/passes/%s",
-			passID,
-		), qrcode.Medium,
-	)
-	if err != nil {
-		p.log.Error("failed to generate QR code", sl.Err(err))
-		return bizErrors.ErrorInternalServer
-	}
-
-	// Get PNG bytes
-	png, err := qr.PNG(256)
-	if err != nil {
-		p.log.Error("failed to encode QR code as PNG", sl.Err(err))
-		return bizErrors.ErrorInternalServer
-	}
-
-	// Save QR code to MinIO
-	if err := p.qrCodeSaver.SaveQRCode(ctx, passID, png); err != nil {
-		p.log.Error("failed to save QR code to storage", sl.Err(err))
-		return bizErrors.ErrorInternalServer
 	}
 
 	return nil

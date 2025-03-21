@@ -248,7 +248,7 @@ definitions:
     - login
     - password
     type: object
-host: localhost:8000
+host: 172.17.17.145:8000
 info:
   contact:
     email: support@swagger.io
@@ -259,7 +259,7 @@ info:
     name: Apache 2.0
     url: http://www.apache.org/licenses/LICENSE-2.0.html
   termsOfService: http://swagger.io/terms/
-  title: RIP API
+  title: Service-propusk API
   version: "1.0"
 paths:
   /buildings:

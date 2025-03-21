@@ -5,12 +5,12 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	model "rip/internal/domain"
-	bizErrors "rip/internal/pkg/errors/biz"
-	http_api "rip/internal/pkg/http-api"
-	"rip/internal/pkg/logger/sl"
-	buildService "rip/internal/service/building"
-	passService "rip/internal/service/pass"
+	model "service-propusk-backend/internal/domain"
+	bizErrors "service-propusk-backend/internal/pkg/errors/biz"
+	http_api "service-propusk-backend/internal/pkg/http-api"
+	"service-propusk-backend/internal/pkg/logger/sl"
+	buildService "service-propusk-backend/internal/service/building"
+	passService "service-propusk-backend/internal/service/pass"
 
 	"github.com/google/uuid"
 )

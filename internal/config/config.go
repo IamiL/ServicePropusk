@@ -3,11 +3,11 @@ package config
 import (
 	"flag"
 	"os"
-	"rip/internal/app"
-	"rip/internal/app/graphql"
-	httpapp "rip/internal/app/http"
-	"rip/internal/repository/postgres"
-	"rip/internal/repository/s3minio"
+	"service-propusk-backend/internal/app"
+	"service-propusk-backend/internal/app/graphql"
+	httpapp "service-propusk-backend/internal/app/http"
+	"service-propusk-backend/internal/repository/postgres"
+	"service-propusk-backend/internal/repository/s3minio"
 
 	"github.com/ilyakaznacheev/cleanenv"
 )

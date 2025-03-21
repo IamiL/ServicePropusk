@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	model "rip/internal/domain"
-	postgresBuilds "rip/internal/repository/postgres/buildings"
+	model "service-propusk-backend/internal/domain"
+	postgresBuilds "service-propusk-backend/internal/repository/postgres/buildings"
 	"strings"
 
 	"github.com/minio/minio-go/v7"

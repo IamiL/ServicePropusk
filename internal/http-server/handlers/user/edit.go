@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	http_api "rip/internal/pkg/http-api"
-	"rip/internal/pkg/logger/sl"
-	userService "rip/internal/service/user"
+	http_api "service-propusk-backend/internal/pkg/http-api"
+	"service-propusk-backend/internal/pkg/logger/sl"
+	userService "service-propusk-backend/internal/service/user"
 )
 
 // EditUserRequest представляет запрос на редактирование пользователя
